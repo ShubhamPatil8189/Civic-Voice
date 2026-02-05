@@ -173,7 +173,7 @@ const VoiceAssistant = () => {
           {matchedSchemes.map((s) => (
             <Link
               key={s._id}
-              to={`/eligibility/${s._id}`} // ✅ Navigate to Eligibility page
+              to={`/eligibility/${s._id}`}
               className="border p-4 rounded shadow bg-white hover:shadow-lg transition"
             >
               <h3 className="font-bold text-lg text-gray-800">
