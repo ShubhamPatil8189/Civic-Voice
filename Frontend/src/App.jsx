@@ -22,14 +22,27 @@ const App = () => (
       <BrowserRouter>
         <div className="pb-16 md:pb-0">
           <Routes>
+            {/* Landing page */}
             <Route path="/" element={<Landing />} />
+
+            {/* Voice assistant */}
             <Route path="/voice-assistant" element={<VoiceAssistant />} />
-                <Route path="/eligibility/:schemeId" element={<Eligibility />} />
+
+            {/* Eligibility page - dynamic route based on scheme ID */}
+            <Route path="/eligibility/:schemeId" element={<Eligibility />} />
+
+            {/* Steps guide */}
             <Route path="/steps" element={<StepGuide />} />
+
+            {/* Summary page */}
             <Route path="/summary" element={<Summary />} />
+
+            {/* Catch-all 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
+
+        {/* Bottom navigation */}
         <BottomNav />
       </BrowserRouter>
     </TooltipProvider>
