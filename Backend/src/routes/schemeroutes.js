@@ -1,16 +1,10 @@
+
+
 const express = require("express");
 const router = express.Router();
-const Scheme = require("../models/Scheme"); // make sure the path is correct
+const { getSchemes } = require("../controllers/schemeController");
 
-// GET all schemes
-router.get("/", async (req, res) => {
-  try {
-    const schemes = await Scheme.find();
-    res.json(schemes);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
+// GET schemes?keyword=xxx&language=en
+router.get("/", getSchemes);
 
 module.exports = router;

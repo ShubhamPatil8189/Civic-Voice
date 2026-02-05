@@ -1,8 +1,5 @@
 const notFound = (req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.originalUrl}`,
-  });
+  res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 };
 
 module.exports = notFound;
