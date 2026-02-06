@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import VoiceAssistant from "./pages/VoiceAssistant";
 import Eligibility from "./pages/Eligibility";
+import Schemes from "./pages/Schemes";
+import About from "./pages/About";
+import Help from "./pages/Help";
 import StepGuide from "./pages/StepGuide";
 import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
@@ -24,6 +27,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/voice-assistant" element={<VoiceAssistant />} />
+            <Route path="/schemes" element={<Schemes />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/help" element={<Help />} />
                 <Route path="/eligibility/:schemeId" element={<Eligibility />} />
             <Route path="/steps" element={<StepGuide />} />
             <Route path="/summary" element={<Summary />} />
