@@ -204,6 +204,39 @@ const VoiceAssistant = () => {
             </div>
           </form>
         </div>
+        
+        {/* Scheme Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
+          {matchedSchemes.map((s) => (
+            <Link
+              key={s._id}
+              to={`/eligibility/${s._id}`}
+              className="border p-4 rounded shadow bg-white hover:shadow-lg transition"
+            >
+              <h3 className="font-bold text-lg text-gray-800">
+                {language === "en" ? s.name_en : language === "hi" ? s.name_hi : s.name_mr}
+              </h3>
+              <p className="text-gray-600 mt-1">
+                {language === "en"
+                  ? s.description_en
+                  : language === "hi"
+                  ? s.description_hi
+                  : s.description_mr}
+              </p>
+              <p className="font-medium mt-2">
+                Benefits:{" "}
+                {language === "en"
+                  ? s.benefits_en
+                  : language === "hi"
+                  ? s.benefits_hi
+                  : s.benefits_mr}
+              </p>
+              <p className="text-xs mt-1 text-gray-500">
+                Documents: {s.documentsRequired.join(", ")}
+              </p>
+            </Link>
+          ))}
+        </div>
 
         {/* Conversation Display */}
         {(spokenText || assistantText) && (
