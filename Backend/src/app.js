@@ -9,6 +9,7 @@ app.use(express.json());
 // ✅ ROUTES
 app.use("/api/session", require("./routes/sessionroutes"));
 app.use("/api/conversation", require("./routes/conversationsroutes"));
+//app.use("/api/eligibility", require("./routes/eligibilityroutes"));
 app.use("/api/eligibility", require("./routes/eligibilityroutes"));
 app.use("/api/scheme", require("./routes/schemeroutes"));
 app.use("/api/voice", require("./routes/Voiceroutes"));

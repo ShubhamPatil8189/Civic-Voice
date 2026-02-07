@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Globe, ArrowDown, Search, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { Globe, FileText, ArrowRight, Mic, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import MicButton from "@/components/ui/MicButton";
 
 const languageConfig = {
   en: { label: "English", code: "en-US" },
@@ -17,162 +16,160 @@ const BACKEND_URL = "http://localhost:5000";
 const VoiceAssistant = () => {
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
-  const [spokenText, setSpokenText] = useState("");
   const [assistantText, setAssistantText] = useState("");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState(localStorage.getItem("lang") || "en");
   const [matchedSchemes, setMatchedSchemes] = useState([]);
   const [queryText, setQueryText] = useState("");
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Setup voice recognition
+  useEffect(() => {
+    localStorage.setItem("lang", language);
+  }, [language]);
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      setAssistantText("Voice recognition not supported in this browser");
+      return;
+    }
 
     const recognition = new SpeechRecognition();
     recognition.lang = languageConfig[language].code;
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => {
+    recognition.onstart = () => {
+      setIsListening(true);
+      setAssistantText(`Listening in ${languageConfig[language].label}...`);
+    };
+
+    recognition.onend = () => {
       setIsListening(false);
-      setAssistantText("Error in recognition.");
     };
 
     recognition.onresult = async (event) => {
       const text = event.results[0][0].transcript;
-      setSpokenText(text);
+      setQueryText(text);
       await fetchSchemes(text);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setAssistantText("Error listening. Please try typing instead.");
+      setIsListening(false);
     };
 
     recognitionRef.current = recognition;
   }, [language]);
 
-  // Fetch matching schemes from backend
   const fetchSchemes = async (text) => {
+    if (!text || text.trim() === "") {
+      setAssistantText("Please speak or type something to search");
+      return;
+    }
+    
+    setIsLoading(true);
+    setAssistantText(`Searching for "${text}"...`);
+    
     try {
-      const res = await fetch(`${BACKEND_URL}/api/voice/process`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, language }),
-      });
+      const res = await fetch(
+        `${BACKEND_URL}/api/scheme/search?keyword=${encodeURIComponent(text)}&language=${language}`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
-      setMatchedSchemes(data.session?.matchedSchemes || []);
-      const reply = data.session?.matchedSchemes?.length
-        ? `Found ${data.session.matchedSchemes.length} scheme(s).`
-        : "No matching schemes found.";
-      setAssistantText(reply);
-      speak(reply);
+      const schemes = data.schemes || [];
+      setMatchedSchemes(schemes);
+      
+      if (schemes.length > 0) {
+        if (data.source === "external_api") {
+          setAssistantText(`Found ${schemes.length} external scheme(s) for "${text}"`);
+        } else {
+          setAssistantText(`Found ${schemes.length} scheme(s) from database`);
+        }
+      } else {
+        setAssistantText(`No schemes found for "${text}"`);
+      }
     } catch (err) {
-      console.error(err);
-      setAssistantText("Error fetching schemes.");
+      console.error("Fetch error:", err);
+      setAssistantText("Error connecting to server. Please try again.");
+      setMatchedSchemes([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Speak text using Web Speech API
-  const speak = (text) => {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = languageConfig[language].code;
-    window.speechSynthesis.speak(utter);
-  };
-
-  // Handle mic button click
   const handleMicClick = () => {
-    if (!recognitionRef.current) return;
-    if (isListening) recognitionRef.current.stop();
-    else {
-      setSpokenText("");
-      setAssistantText("");
-      setMatchedSchemes([]);
+    if (!recognitionRef.current) {
+      setAssistantText("Voice recognition not available");
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      setAssistantText("Stopped listening");
+    } else {
+      setQueryText("");
+      setAssistantText("Speak now...");
       recognitionRef.current.start();
     }
   };
 
-  // Handle text input submission
-  const handleTextSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setSpokenText(queryText);
-    await fetchSchemes(queryText);
-  };
-
-  // Handle language selection
-  const handleLanguageSelect = (lang) => {
-    setLanguage(lang);
-    setShowLangDropdown(false);
-    setMatchedSchemes([]);
-    setAssistantText("");
-    setSpokenText("");
-    setQueryText("");
+    fetchSchemes(queryText);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header variant="landing" />
 
-      <style>{`
-        :root{--accent1:#7c3aed;--accent2:#06b6d4;}
-        .card-wrap { padding: 2px; border-radius: 1rem; background: linear-gradient(90deg,var(--accent1),var(--accent2)); }
-        .glass-card { background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85)); border-radius: calc(1rem - 2px); padding: 1.2rem; backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(2,6,23,0.04); transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s; }
-        .glass-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 12px 24px rgba(2,6,23,0.08); }
-        .page-badge { background: linear-gradient(90deg, rgba(124,58,237,0.08), rgba(6,182,212,0.05)); padding: .45rem .75rem; border-radius: .75rem; font-weight:600; }
-        .feature-title { background: linear-gradient(135deg,#8b5cf6,#06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .hero-card { background: linear-gradient(135deg, rgba(124,58,237,0.04), rgba(6,182,212,0.02)); border-radius: 1rem; padding: 1.6rem; box-shadow: 0 6px 18px rgba(99,102,241,0.04); }
-        .mic-ring { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse-ring { 0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); } 50% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); } }
-      `}</style>
-
-      {/* Hero Section */}
-      <section className="relative py-12 md:py-16 border-b">
-        <div className="container mx-auto px-4">
-          <div className="hero-card max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-              Speak Your <span className="feature-title">Question</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Use your voice to discover government schemes and civic services tailored to your needs.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-12">
-        
-        {/* Centered Mic Section */}
-        <div className="flex flex-col items-center justify-center gap-8 mb-12">
-          <div className="flex flex-col items-center gap-6">
-            {/* Mic Button - Centered */}
-            <div className={`relative ${isListening ? "mic-ring" : ""}`}>
-              <div className="rounded-full p-2">
-                <MicButton
-                  size="lg"
-                  label={isListening ? "Listening..." : "Tap to Speak"}
-                  isListening={isListening}
-                  onClick={handleMicClick}
-                  className="h-20 w-20"
-                />
-              </div>
-            </div>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center gap-8 mb-12">
+            <button
+              onClick={handleMicClick}
+              className={`p-5 rounded-full flex items-center justify-center transition-all ${
+                isListening 
+                  ? 'bg-red-500 animate-pulse text-white' 
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+              }`}
+            >
+              {isListening ? (
+                <Square className="h-7 w-7" />
+              ) : (
+                <Mic className="h-7 w-7" />
+              )}
+            </button>
 
-            {/* Language Selector */}
             <div className="relative">
-              <button
-                onClick={() => setShowLangDropdown((p) => !p)}
-                className="px-4 py-2 rounded-full border border-primary/30 bg-white/60 backdrop-blur hover:bg-white/80 transition-colors flex items-center gap-2 text-sm font-medium"
+              <Button 
+                onClick={() => setShowLangDropdown(!showLangDropdown)} 
+                variant="outline"
+                className="flex items-center gap-2"
               >
-                <Globe className="h-4 w-4" /> {languageConfig[language].label}
-                <ArrowDown className="h-3 w-3" />
-              </button>
+                <Globe className="h-4 w-4" /> 
+                {languageConfig[language].label}
+              </Button>
+
               {showLangDropdown && (
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 w-40 rounded-xl bg-white shadow-lg border overflow-hidden z-10">
+                <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-white border rounded-lg shadow-xl z-50 min-w-[120px]">
                   {Object.entries(languageConfig).map(([key, { label }]) => (
                     <button
                       key={key}
-                      onClick={() => handleLanguageSelect(key)}
-                      className="w-full text-left px-4 py-2 hover:bg-primary/10 transition-colors"
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
+                        language === key ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
+                      onClick={() => {
+                        setLanguage(key);
+                        setShowLangDropdown(false);
+                        setAssistantText(`Language changed to ${label}`);
+                      }}
                     >
                       {label}
                     </button>
@@ -180,167 +177,117 @@ const VoiceAssistant = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Text Input */}
-          <form
-            onSubmit={handleTextSubmit}
-            className="w-full max-w-2xl"
-          >
-            <div className="card-wrap rounded-xl">
-              <div className="glass-card flex items-center gap-3 p-3">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+              <div className="flex gap-2">
                 <input
-                  type="text"
+                  className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={queryText}
                   onChange={(e) => setQueryText(e.target.value)}
-                  placeholder="Or type your question here..."
-                  className="flex-1 bg-transparent outline-none text-sm placeholder-muted-foreground"
+                  placeholder={
+                    language === 'en' ? "Search government schemes..." :
+                    language === 'hi' ? "सरकारी योजनाएं खोजें..." :
+                    "सरकारी योजना शोधा..."
+                  }
+                  disabled={isLoading}
                 />
-                <Button type="submit" size="sm" className="rounded-lg">
-                  Search
+                <Button 
+                  type="submit" 
+                  disabled={!queryText.trim() || isLoading}
+                >
+                  {isLoading ? "Searching..." : "Search"}
                 </Button>
               </div>
-            </div>
-          </form>
-        </div>
-        
-        {/* Scheme Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
-          {matchedSchemes.map((s) => (
-            <Link
-              key={s._id}
-              to={`/eligibility/${s._id}`}
-              className="border p-4 rounded shadow bg-white hover:shadow-lg transition"
-            >
-              <h3 className="font-bold text-lg text-gray-800">
-                {language === "en" ? s.name_en : language === "hi" ? s.name_hi : s.name_mr}
-              </h3>
-              <p className="text-gray-600 mt-1">
-                {language === "en"
-                  ? s.description_en
-                  : language === "hi"
-                  ? s.description_hi
-                  : s.description_mr}
-              </p>
-              <p className="font-medium mt-2">
-                Benefits:{" "}
-                {language === "en"
-                  ? s.benefits_en
-                  : language === "hi"
-                  ? s.benefits_hi
-                  : s.benefits_mr}
-              </p>
-              <p className="text-xs mt-1 text-gray-500">
-                Documents: {s.documentsRequired.join(", ")}
-              </p>
-            </Link>
-          ))}
-        </div>
+            </form>
 
-        {/* Conversation Display */}
-        {(spokenText || assistantText) && (
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="card-wrap rounded-xl">
-              <div className="glass-card p-6">
-                {spokenText && (
-                  <div className="mb-4 pb-4 border-b border-border/40">
-                    <p className="text-xs text-muted-foreground mb-1">You said:</p>
-                    <p className="text-lg font-semibold text-foreground">{spokenText}</p>
-                  </div>
-                )}
-                {assistantText && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Assistant:</p>
-                    <p className="text-lg text-primary font-semibold">{assistantText}</p>
-                  </div>
-                )}
+            <div className="w-full max-w-2xl min-h-[40px]">
+              <p className="text-gray-600 text-center">
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-3 w-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+                    {assistantText}
+                  </span>
+                ) : assistantText || "Use voice or text to search government schemes"}
+              </p>
+            </div>
+          </div>
+
+          {matchedSchemes.length > 0 && (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">
+                  {language === 'en' ? 'Search Results' : 
+                   language === 'hi' ? 'खोज परिणाम' : 
+                   'शोध परिणाम'}
+                  <span className="ml-3 text-lg font-normal text-gray-600">
+                    ({matchedSchemes.length} found)
+                  </span>
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Language:</span>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                    {languageConfig[language].label}
+                  </span>
+                </div>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {matchedSchemes.map((s) => {
+                  const schemeId = s._id?.$oid || s._id || s.id;
+
+                  return (
+                    <Link
+                      key={schemeId}
+                      to={`/eligibility/${schemeId}?lang=${language}`}
+                      className="group card-wrap rounded-xl border p-1 bg-white hover:shadow-lg transition-all hover:scale-[1.02]"
+                    >
+                      <div className="glass-card p-6 h-full flex flex-col">
+                        {s.isExternal && (
+                          <div className="mb-2">
+                            <span className="inline-block px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                              External Source
+                            </span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
+                            {s[`name_${language}`] || s.name_en || "Scheme Name"}
+                          </h3>
+                          <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                        </div>
+
+                        <p className="text-sm text-muted-foreground mb-3 flex-grow">
+                          {s[`description_${language}`] || s.description_en || "No description available"}
+                        </p>
+
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                            {s[`category_${language}`] || s.category_en || "Government"}
+                          </span>
+                          <div className="flex items-center gap-2 text-primary font-semibold text-sm group-hover:translate-x-1 transition-transform">
+                            View Details <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {!isLoading && queryText && matchedSchemes.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                No schemes found for "{queryText}". Try different keywords.
+              </p>
             </div>
-          </div>
-        )}
-
-        {/* Results Grid */}
-        {matchedSchemes.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-center">
-              <span className="feature-title">Matching Schemes</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {matchedSchemes.map((s) => (
-                <Link
-                  key={s._id}
-                  to={`/eligibility/${s._id}`}
-                  className="group card-wrap rounded-xl"
-                >
-                  <div className="glass-card p-6 h-full flex flex-col">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                        {language === "en" ? s.name_en : language === "hi" ? s.name_hi : s.name_mr}
-                      </h3>
-                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                    </div>
-
-                    <p className="text-sm text-muted-foreground mb-3 flex-grow">
-                      {language === "en"
-                        ? s.description_en
-                        : language === "hi"
-                        ? s.description_hi
-                        : s.description_mr}
-                    </p>
-
-                    <div className="mb-3 pb-3 border-t border-border/40">
-                      <p className="text-xs text-muted-foreground mb-1">Benefits:</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {language === "en"
-                          ? s.benefits_en
-                          : language === "hi"
-                          ? s.benefits_hi
-                          : s.benefits_mr}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {s.documentsRequired.slice(0, 3).map((d, i) => (
-                        <span
-                          key={i}
-                          className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"
-                        >
-                          {d}
-                        </span>
-                      ))}
-                      {s.documentsRequired.length > 3 && (
-                        <span className="text-xs text-muted-foreground">+{s.documentsRequired.length - 3} more</span>
-                      )}
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-2 text-primary font-semibold text-sm group-hover:translate-x-1 transition-transform">
-                      Learn More <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!spokenText && !assistantText && matchedSchemes.length === 0 && (
-          <div className="max-w-2xl mx-auto text-center py-12">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-6">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Start Exploring Schemes</h3>
-            <p className="text-muted-foreground">
-              Tap the microphone above or type your question to discover government schemes tailored to you.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </main>
 
-      <div className="mt-auto">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 };

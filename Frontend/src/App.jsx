@@ -14,6 +14,7 @@ import StepGuide from "./pages/StepGuide";
 import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/layout/BottomNav";
+import { LanguageProvider } from "./context/LanguageContext";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      
+<LanguageProvider></LanguageProvider>
       <BrowserRouter>
         <div className="pb-16 md:pb-0">
           <Routes>
@@ -33,11 +36,7 @@ const App = () => (
             <Route path="/schemes" element={<Schemes />} />
             <Route path="/about" element={<About />} />
             <Route path="/help" element={<Help />} />
-                <Route path="/eligibility/:schemeId" element={<Eligibility />} />
-
-            {/* Eligibility page - dynamic route based on scheme ID */}
             <Route path="/eligibility/:schemeId" element={<Eligibility />} />
-
             {/* Steps guide */}
             <Route path="/steps" element={<StepGuide />} />
 
