@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+
+    --primary: 187 100% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 20% 96%;
+    --secondary-foreground: 220 20% 15%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 187 100% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 35 100% 50%;
+    --warning-foreground: 35 100% 20%;
+    --warning-bg: 45 100% 95%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 187 100% 42%;
+
+    --radius: 0.75rem;
+
+    --hero-gradient: linear-gradient(135deg, hsl(187 30% 97%) 0%, hsl(200 30% 96%) 100%);
+    --card-shadow: 0 2px 8px -2px hsl(220 20% 15% / 0.08), 0 4px 16px -4px hsl(220 20% 15% / 0.06);
+    --card-shadow-hover: 0 4px 12px -2px hsl(220 20% 15% / 0.12), 0 8px 24px -4px hsl(220 20% 15% / 0.08);
+    --mic-glow: 0 0 0 8px hsl(187 100% 42% / 0.15), 0 0 0 16px hsl(187 100% 42% / 0.08);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 187 100% 42%;
+  }
+
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 210 20% 98%;
+
+    --card: 220 20% 13%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 220 20% 13%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 187 100% 50%;
+    --primary-foreground: 220 20% 10%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 187 100% 50%;
+    --accent-foreground: 220 20% 10%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 35 100% 50%;
+    --warning-foreground: 35 100% 95%;
+    --warning-bg: 35 60% 20%;
+
+    --success: 160 84% 45%;
+    --success-foreground: 220 20% 10%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 187 100% 50%;
+
+    --hero-gradient: linear-gradient(135deg, hsl(220 20% 12%) 0%, hsl(220 25% 14%) 100%);
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary-foreground: 220 20% 10%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 20% 20%;
+    --sidebar-ring: 187 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .hero-section {
+    background: var(--hero-gradient);
+  }
+
+  .card-elevated {
+    box-shadow: var(--card-shadow);
+    @apply bg-card rounded-xl border border-border/50 transition-shadow duration-200;
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  .mic-button {
+    @apply bg-primary text-primary-foreground rounded-full p-6 transition-all duration-200;
+    box-shadow: var(--mic-glow);
+  }
+
+  .mic-button:hover {
+    @apply scale-105;
+  }
+
+  .mic-button:active {
+    @apply scale-95;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-success/10 text-success;
+  }
+
+  .status-badge-warning {
+    @apply text-warning;
+    background: hsl(var(--warning-bg));
+  }
+
+  .status-badge-primary {
+    @apply bg-primary/10 text-primary;
+  }
+
+  .step-number {
+    @apply w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg;
+  }
+
+  .progress-bar {
+    @apply h-2 bg-secondary rounded-full overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full bg-primary rounded-full transition-all duration-500;
+  }
+
+  .info-card-warning {
+    background: hsl(var(--warning-bg));
+    @apply border border-warning/30 rounded-xl p-4;
+  }
+
+  .listening-indicator {
+    @apply flex items-center gap-1;
+  }
+
+  .listening-indicator span {
+    @apply w-1 bg-primary rounded-full animate-pulse;
+  }
+
+  .listening-indicator span:nth-child(1) { @apply h-3; animation-delay: 0ms; }
+  .listening-indicator span:nth-child(2) { @apply h-5; animation-delay: 150ms; }
+  .listening-indicator span:nth-child(3) { @apply h-4; animation-delay: 300ms; }
+  .listening-indicator span:nth-child(4) { @apply h-5; animation-delay: 150ms; }
+  .listening-indicator span:nth-child(5) { @apply h-3; animation-delay: 0ms; }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .h-safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

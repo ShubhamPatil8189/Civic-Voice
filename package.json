@@ -1,0 +1,15 @@
+{
+  "name": "cv-interface",
+  "version": "1.0.0",
+  "description": "CV Interface Application",
+  "private": true,
+  "scripts": {
+    "dev": "cd Frontend && npm run dev",
+    "build": "cd Frontend && npm run build",
+    "build:dev": "cd Frontend && npm run build:dev",
+    "preview": "cd Frontend && npm run preview",
+    "lint": "cd Frontend && npm run lint",
+    "test": "cd Frontend && npm run test",
+    "test:watch": "cd Frontend && npm run test:watch"
+  }
+}
