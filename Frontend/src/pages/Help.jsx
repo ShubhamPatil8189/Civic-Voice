@@ -1,59 +1,89 @@
 import { Link } from "react-router-dom";
-import { Search, MessageCircle, Phone, Mail, Zap, BookOpen, AlertCircle, Home } from "lucide-react";
+import { Search, MessageCircle, Phone, Mail, Zap, BookOpen, AlertCircle, Home, Sparkles, RefreshCw, CheckCircle, ChevronDown } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+
+const BACKEND_URL = "http://localhost:5000";
 
 const Help = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const faqs = [
-    {
-      q: "How do I find schemes I'm eligible for?",
-      a: "Use the Voice Assistant to describe your situation (e.g., 'I'm a farmer looking for subsidies'), or visit the Schemes page and browse by category. The platform will match you with relevant programs.",
-      category: "Getting Started"
-    },
-    {
-      q: "What languages are supported?",
-      a: "We currently support English, Hindi, and Marathi. You can change language from the language selector in the navbar.",
-      category: "Features"
-    },
-    {
-      q: "How do I check my eligibility?",
-      a: "Click 'Check Eligibility' on any scheme card. Answer simple questions about your income, location, age and occupation. Results are instant.",
-      category: "Eligibility"
-    },
-    {
-      q: "Can I save my progress?",
-      a: "Yes. Visit the Action Summary page to view your previous queries, matched schemes and next steps. No login required.",
-      category: "Account & Progress"
-    },
-    {
-      q: "Is my data secure?",
-      a: "We collect minimal personal data and only with your explicit consent. We never share your information with third parties without permission.",
-      category: "Privacy & Security"
-    },
-    {
-      q: "How do I apply for a scheme after finding it?",
-      a: "Visit the Application Guide for step-by-step instructions, required documents, and links to official portals or offline application centers.",
-      category: "Application"
-    },
-    {
-      q: "Can I use this platform on mobile?",
-      a: "Yes. The platform is fully optimized for mobile and works on both iOS and Android browsers.",
-      category: "Technical"
-    },
-    {
-      q: "What if the Voice Assistant doesn't understand me?",
-      a: "Try the text input option instead, or contact our support team. We're continuously improving our voice recognition.",
-      category: "Troubleshooting"
+  // Fetch FAQs from Backend with pagination
+  const fetchFAQs = async (page = 1, reset = false) => {
+    if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
     }
-  ];
+
+    try {
+      const limit = page === 1 ? 4 : 2; // First load: 4, subsequent: 2
+      const res = await fetch(`${BACKEND_URL}/api/faqs?page=${page}&limit=${limit}`);
+      const data = await res.json();
+
+      if (reset || page === 1) {
+        setFaqs(data.faqs || []);
+      } else {
+        setFaqs(prev => [...prev, ...(data.faqs || [])]);
+      }
+
+      setHasMore(data.pagination?.hasMore || false);
+      setCurrentPage(page);
+    } catch (err) {
+      console.error("Error fetching FAQs:", err);
+      toast.error("Failed to load FAQs");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFAQs(1);
+  }, []);
+
+  // Handle Show More button click
+  const handleShowMore = () => {
+    if (hasMore && !loadingMore) {
+      fetchFAQs(currentPage + 1);
+    }
+  };
+
+  // Trigger Smart FAQ Generation
+  const handleGenerateFAQs = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/faqs/generate`, {
+        method: "POST"
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchFAQs(1, true); // Reset to page 1
+      } else {
+        toast.info(data.message || "No new FAQs generated");
+      }
+    } catch (err) {
+      console.error("Error generating FAQs:", err);
+      toast.error("Failed to generate FAQs");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const filteredFaqs = faqs.filter(faq =>
-    faq.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faq.a.toLowerCase().includes(searchTerm.toLowerCase())
+    faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -66,8 +96,26 @@ const Help = () => {
         .search-input { background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95)); border-radius: 999px; padding: .8rem 1.2rem; box-shadow: 0 8px 24px rgba(2,6,23,0.05); border: 1px solid rgba(2,6,23,0.04); }
         .faq-item { background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.92)); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 6px 18px rgba(2,6,23,0.04); transition: all .3s; }
         .faq-item:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(2,6,23,0.08); }
-        .support-card { border-radius: 1rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.92)); box-shadow: 0 10px 30px rgba(2,6,23,0.05); transition: transform .3s; }
-        .support-card:hover { transform: translateY(-6px); }
+        .show-more-btn { 
+          background: white; 
+          color: #6366f1; 
+          border: 2px solid #e0e7ff; 
+          border-radius: 0.5rem; 
+          padding: 0.75rem 1.75rem; 
+          font-weight: 600; 
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .show-more-btn:hover:not(:disabled) { 
+          background: #f5f7ff;
+          border-color: #c7d2fe;
+          transform: translateY(-1px);
+        }
+        .show-more-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       `}</style>
 
       <main className="container mx-auto px-4 py-16 relative flex-1">
@@ -94,51 +142,86 @@ const Help = () => {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Quick Support</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a href="tel:1800-SCHEMES" className="support-card text-center">
-              <Phone className="h-8 w-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-1">Call Us</h3>
-              <p className="text-sm text-muted-foreground">1800-SCHEMES (24/7)</p>
-            </a>
-
-            <a href="mailto:help@civicvoice.gov" className="support-card text-center">
-              <Mail className="h-8 w-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-1">Email</h3>
-              <p className="text-sm text-muted-foreground">help@civicvoice.gov</p>
-            </a>
-
-            <div className="support-card text-center">
-              <MessageCircle className="h-8 w-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-1">Chat</h3>
-              <p className="text-sm text-muted-foreground">Live chat available 9am–6pm</p>
-            </div>
-
-            <div className="support-card text-center">
-              <Zap className="h-8 w-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-1">Status</h3>
-              <p className="text-sm text-muted-foreground">Check system uptime</p>
-            </div>
+          <div className="flex items-center justify-between mb-6 px-4">
+            <h2 className="text-2xl font-semibold text-center sm:text-left">Frequently Asked Questions</h2>
+            <Button
+              onClick={handleGenerateFAQs}
+              disabled={generating}
+              variant="outline"
+              className="gap-2 border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+            >
+              {generating ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-purple-600" />
+              )}
+              {generating ? "Learning..." : "Smart Update"}
+            </Button>
           </div>
-        </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Frequently Asked Questions</h2>
           <div className="max-w-3xl mx-auto space-y-4">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq, i) => (
-                <details key={i} className="faq-item group cursor-pointer">
-                  <summary className="flex items-start gap-4 outline-none select-none">
-                    <div className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full mt-1">
-                      {faq.category}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
+                <p className="text-muted-foreground">Loading answers...</p>
+              </div>
+            ) : filteredFaqs.length > 0 ? (
+              <>
+                {filteredFaqs.map((faq, i) => (
+                  <details key={faq._id || i} className="faq-item group cursor-pointer">
+                    <summary className="flex items-start gap-4 outline-none select-none">
+                      <div className="flex flex-col items-center gap-2 mt-1">
+                        <div className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                          {faq.category}
+                        </div>
+                        {faq.isAutoGenerated && (
+                          <div className="text-[10px] font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                            <Sparkles className="h-2 w-2" />
+                            New
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold group-open:text-primary transition-colors text-left pt-1">{faq.question}</h3>
+                      </div>
+                    </summary>
+                    <p className="mt-4 text-sm text-muted-foreground leading-relaxed pl-2">{faq.answer}</p>
+                  </details>
+                ))}
+
+                {/* Show More Button - only show if less than 7 FAQs and more available */}
+                {!searchTerm && hasMore && faqs.length < 7 && (
+                  <div className="py-8 text-center">
+                    <button
+                      onClick={handleShowMore}
+                      disabled={loadingMore}
+                      className="show-more-btn inline-flex items-center gap-2"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-indigo-600"></div>
+                          <span>Loading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Show More</span>
+                          <ChevronDown className="h-5 w-5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* No More FAQs Message - show when 7 or more FAQs loaded OR no more available */}
+                {!searchTerm && (faqs.length >= 7 || (!hasMore && faqs.length > 4)) && (
+                  <div className="py-6 text-center">
+                    <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-3 rounded-full border border-purple-100">
+                      <CheckCircle className="h-4 w-4 text-purple-600" />
+                      <span className="font-medium">You've reached the end - all FAQs loaded!</span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold group-open:text-primary transition-colors">{faq.q}</h3>
-                    </div>
-                  </summary>
-                  <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-                </details>
-              ))
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-8">
                 <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -148,6 +231,7 @@ const Help = () => {
           </div>
         </section>
 
+        {/* Quick Links Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-6 text-center">Quick Links</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
