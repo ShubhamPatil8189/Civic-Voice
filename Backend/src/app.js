@@ -13,6 +13,7 @@ app.use("/api/conversation", require("./routes/conversationsroutes"));
 app.use("/api/eligibility", require("./routes/eligibilityroutes"));
 app.use("/api/scheme", require("./routes/schemeroutes"));
 app.use("/api/voice", require("./routes/Voiceroutes"));
+app.use("/api/faqs", require("./routes/faqRoutes"));
 
 // ✅ MIDDLEWARES
 app.use(require("./middleware/notFound"));
