@@ -1,22 +1,16 @@
-// src/routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { auth } = require('../middleware/auth');
-const {
-    registerValidation,
-    loginValidation
-} = require('../middleware/validators');
+const { requireLogin } = require('../middleware/auth');
 
 // Public routes
-router.post('/register', registerValidation, authController.register);
-router.post('/login', loginValidation, authController.login);
-router.post('/login/mobile-otp', authController.loginWithMobileOTP);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.get('/check', authController.checkAuth);
 
-// Protected routes
-router.get('/profile', auth, authController.getProfile);
-router.put('/profile', auth, authController.updateProfile);
-router.post('/logout', auth, authController.logout);
-router.get('/verify', auth, authController.verifyToken);
+// Protected routes (require login)
+router.get('/me', requireLogin, authController.getCurrentUser);
+router.put('/profile', requireLogin, authController.updateProfile);
+router.post('/logout', requireLogin, authController.logout);
 
 module.exports = router;

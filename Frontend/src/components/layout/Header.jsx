@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Building2, LogIn, User, Home, FileText, HelpCircle } from "lucide-react";
+import { Building2, LogIn, UserPlus, Home, FileText, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -15,23 +15,20 @@ const Header = ({ variant = "landing" }) => {
 
   const appLinks = [
     { href: "/schemes", label: "Schemes", icon: FileText },
-    { href: "/profile", label: "My Profile", icon: User },
+    { href: "/profile", label: "My Profile", icon: UserPlus },
     { href: "/help", label: "Help", icon: HelpCircle },
   ];
 
   const links = variant === "landing" ? landingLinks : appLinks;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <div className="relative p-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl shadow-md">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
+            <div className="p-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
@@ -45,17 +42,20 @@ const Header = ({ variant = "landing" }) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/"
-              className="group relative px-3 py-2 rounded-lg transition-all hover:bg-gray-50"
+            <Link 
+              to="/" 
+              className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${
+                location.pathname === "/" ? "bg-gray-50" : ""
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <Home className="h-4 w-4 text-gray-500 group-hover:text-purple-600 transition-colors" />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors">
-                  Home
-                </span>
-              </div>
-              <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+              <Home className="h-4 w-4 text-gray-500" />
+              <span className={`text-sm font-medium ${
+                location.pathname === "/" 
+                  ? "text-purple-600 font-semibold" 
+                  : "text-gray-700"
+              }`}>
+                Home
+              </span>
             </Link>
 
             {links.map((link) => {
@@ -64,77 +64,82 @@ const Header = ({ variant = "landing" }) => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="group relative px-3 py-2 rounded-lg transition-all hover:bg-gray-50"
+                  className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${
+                    location.pathname === link.href ? "bg-gray-50" : ""
+                  }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-gray-500 group-hover:text-purple-600 transition-colors" />
-                    <span className={`text-sm font-medium transition-colors ${
-                      location.pathname === link.href
-                        ? "text-purple-600 font-semibold"
-                        : "text-gray-700 group-hover:text-purple-600"
-                    }`}>
-                      {link.label}
-                    </span>
-                  </div>
-                  {location.pathname === link.href && (
-                    <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500"></div>
-                  )}
+                  <Icon className="h-4 w-4 text-gray-500" />
+                  <span className={`text-sm font-medium ${
+                    location.pathname === link.href
+                      ? "text-purple-600 font-semibold"
+                      : "text-gray-700"
+                  }`}>
+                    {link.label}
+                  </span>
                 </Link>
               );
             })}
 
-            {/* ✅ FIXED: Login Button linking to /login */}
+            {/* LOGIN BUTTON */}
             <Link to="/login">
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 shadow-md hover:shadow-lg transition-all duration-300 group"
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all"
               >
-                <LogIn className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                <span className="font-semibold">Login / Sign Up</span>
+                <LogIn className="h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+
+            {/* REGISTER BUTTON */}
+            <Link to="/register">
+              <Button
+                size="sm"
+                className="gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg"
+              >
+                <UserPlus className="h-4 w-4" />
+                Sign Up
               </Button>
             </Link>
           </nav>
 
-          {/* Mobile menu button */}
-          <div className="flex md:hidden items-center gap-3">
+          {/* Mobile buttons */}
+          <div className="flex md:hidden items-center gap-2">
             <Link to="/login">
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="gap-2 bg-gradient-to-r from-purple-100 to-cyan-100 hover:from-purple-200 hover:to-cyan-200 text-purple-700 border border-purple-200"
+                size="sm"
+                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               >
-                <LogIn className="h-4 w-4" />
-                <span className="font-medium">Login</span>
+                Login
               </Button>
             </Link>
-            
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="relative"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              <div className="space-y-1">
-                <div className={`w-6 h-0.5 bg-gray-600 transition-transform ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-                <div className={`w-6 h-0.5 bg-gray-600 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></div>
-                <div className={`w-6 h-0.5 bg-gray-600 transition-transform ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
-              </div>
-            </Button>
+
+            <Link to="/register">
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700"
+              >
+                Sign Up
+              </Button>
+            </Link>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-lg rounded-b-2xl mx-4 overflow-hidden animate-slideDown">
-            <div className="py-3 px-4 space-y-1">
-              <Link
-                to="/"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+      {/* Mobile Menu (if needed) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t bg-white">
+          <div className="container mx-auto px-4 py-3">
+            <nav className="flex flex-col space-y-2">
+              <Link 
+                to="/" 
+                className="px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Home className="h-5 w-5 text-gray-500" />
-                <span className="font-medium text-gray-700">Home</span>
+                <Home className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Home</span>
               </Link>
               
               {links.map((link) => {
@@ -143,46 +148,20 @@ const Header = ({ variant = "landing" }) => {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Icon className="h-5 w-5 text-gray-500" />
-                    <span className="font-medium text-gray-700">{link.label}</span>
+                    <Icon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {link.label}
+                    </span>
                   </Link>
                 );
               })}
-              
-              <div className="pt-3 border-t">
-                <Link
-                  to="/login"
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold hover:from-purple-700 hover:to-cyan-700 transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <LogIn className="h-5 w-5" />
-                  Login / Sign Up
-                </Link>
-              </div>
-            </div>
+            </nav>
           </div>
-        )}
-      </div>
-
-      <style>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.3s ease-out;
-        }
-      `}</style>
+        </div>
+      )}
     </header>
   );
 };

@@ -1,120 +1,163 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-
-const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const result = await login(email);
-    if (result.success) {
-      navigate('/verify-otp');
-    } else {
-      setError(result.message);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label>Email *</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '10px 20px', width: '100%' }}
-        >
-          {loading ? 'Sending OTP...' : 'Send OTP'}
-        </button>
-      </form>
-      <p style={{ marginTop: '15px' }}>
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
-=======
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ArrowLeft, Shield, User, Mail, Lock, Phone, Calendar, MapPin, Globe } from "lucide-react";
+import { ArrowLeft, Shield, User, Mail, Lock, Phone } from "lucide-react";
+import { authAPI } from "@/services/api";
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: ""
+  });
+
+  // Signup form state
+  const [signupData, setSignupData] = useState({
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    gender: "",
+    age: "",
+    dateOfBirth: "",
+    nationality: "",
+    state: "",
+    city: "",
+    pincode: "",
+    email: "",
+    password: ""
+  });
+
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  // Handle login input changes
+  const handleLoginChange = (e) => {
+    setLoginData({
+      ...loginData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Handle signup input changes
+  const handleSignupChange = (e) => {
+    setSignupData({
+      ...signupData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Handle Login Submit
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    // Handle login/signup logic here
-    console.log("Form submitted");
-    // Redirect to home after successful login/signup
-    navigate("/");
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      console.log("Attempting login with:", loginData.email);
+      
+      const response = await authAPI.login(loginData.email, loginData.password);
+      
+      console.log("Login response:", response.data);
+      
+      if (response.data.success) {
+        setSuccess("Login successful! Redirecting...");
+        
+        // Store user data in localStorage (optional)
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Redirect to home/profile after 1 second
+        setTimeout(() => {
+          navigate("/profile");
+        }, 1000);
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err);
+      setError(
+        err.response?.data?.message || 
+        "Login failed. Please check your credentials."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Signup Submit
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    // Age validation
+    if (Number(signupData.age) < 5 || Number(signupData.age) > 120) {
+      setError("Please enter a valid age between 5 and 120");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log("Attempting registration with:", signupData.email);
+      
+      const response = await authAPI.register(signupData);
+      
+      console.log("Registration response:", response.data);
+      
+      if (response.data.success) {
+        setSuccess("Account created successfully! Redirecting to login...");
+        
+        // Clear form
+        setSignupData({
+          firstName: "",
+          middleName: "",
+          lastName: "",
+          gender: "",
+          age: "",
+          dateOfBirth: "",
+          nationality: "",
+          state: "",
+          city: "",
+          pincode: "",
+          email: "",
+          password: ""
+        });
+        
+        // Switch to login after 2 seconds
+        setTimeout(() => {
+          setIsSignup(false);
+          setSuccess("");
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Registration error:", err.response?.data || err);
+      setError(
+        err.response?.data?.message || 
+        "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
-      {/* Include Header */}
       <Header />
 
       <style>{`
-        .login-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        
         .login-modal {
           background: white;
           padding: 2rem;
           border-radius: 1rem;
-          width: 90%;
+          width: 100%;
           max-width: 500px;
           max-height: 90vh;
           overflow-y: auto;
-          position: relative;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .close-btn {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: #666;
-          transition: color 0.2s;
-        }
-        
-        .close-btn:hover {
-          color: #333;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
         
         .login-form,
@@ -133,6 +176,7 @@ const Login = () => {
           border-radius: 0.5rem;
           font-size: 0.95rem;
           transition: all 0.2s;
+          width: 100%;
         }
         
         .login-form input:focus,
@@ -166,11 +210,17 @@ const Login = () => {
           cursor: pointer;
           transition: all 0.3s;
           margin-top: 0.5rem;
+          width: 100%;
         }
         
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 10px 20px rgba(124, 58, 237, 0.2);
+        }
+        
+        .submit-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
         
         .switch-text {
@@ -190,45 +240,55 @@ const Login = () => {
           text-decoration: underline;
         }
         
-        h2 {
-          color: #1e293b;
-          margin-bottom: 1.5rem;
-          font-size: 1.75rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #7c3aed, #06b6d4);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
+        .error-message {
+          background-color: #fee2e2;
+          color: #dc2626;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+          font-size: 0.9rem;
+        }
+        
+        .success-message {
+          background-color: #dcfce7;
+          color: #16a34a;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+          font-size: 0.9rem;
         }
       `}</style>
 
-      {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-4xl">
-          {/* Back to Home Link */}
           <Link 
             to="/" 
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 mb-8 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Side - Login Form */}
-            <div className="login-modal shadow-2xl">
+            {/* Left Side - Login/Signup Form */}
+            <div className="login-modal">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-gradient-to-r from-purple-100 to-cyan-100 rounded-lg">
                   <Shield className="h-6 w-6 text-purple-600" />
                 </div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
                   {!isSignup ? "Welcome Back" : "Create Account"}
                 </h2>
               </div>
 
+              {/* Error/Success Messages */}
+              {error && <div className="error-message">{error}</div>}
+              {success && <div className="success-message">{success}</div>}
+
               {!isSignup ? (
+                // LOGIN FORM
                 <>
-                  <form className="login-form" onSubmit={handleSubmit}>
+                  <form className="login-form" onSubmit={handleLoginSubmit}>
                     <div className="space-y-2">
                       <label className="text-sm font-medium flex items-center gap-2">
                         <Mail className="h-4 w-4" />
@@ -236,9 +296,12 @@ const Login = () => {
                       </label>
                       <input 
                         type="email" 
+                        name="email"
+                        value={loginData.email}
+                        onChange={handleLoginChange}
                         placeholder="Enter your email" 
                         required 
-                        className="w-full"
+                        disabled={loading}
                       />
                     </div>
 
@@ -249,14 +312,21 @@ const Login = () => {
                       </label>
                       <input 
                         type="password" 
+                        name="password"
+                        value={loginData.password}
+                        onChange={handleLoginChange}
                         placeholder="Enter your password" 
                         required 
-                        className="w-full"
+                        disabled={loading}
                       />
                     </div>
 
-                    <button type="submit" className="submit-btn">
-                      Login to CivicAssist
+                    <button 
+                      type="submit" 
+                      className="submit-btn"
+                      disabled={loading}
+                    >
+                      {loading ? "Logging in..." : "Login to CivicAssist"}
                     </button>
                   </form>
 
@@ -265,7 +335,7 @@ const Login = () => {
                       <input type="checkbox" className="rounded" />
                       Remember me
                     </label>
-                    <button className="text-sm text-primary hover:underline">
+                    <button className="text-sm text-purple-600 hover:underline">
                       Forgot Password?
                     </button>
                   </div>
@@ -274,38 +344,46 @@ const Login = () => {
                     Don't have an account?  
                     <span onClick={() => setIsSignup(true)}> Sign Up</span>
                   </p>
-
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-3">Or continue with</p>
-                      <div className="flex gap-3">
-                        <button className="flex-1 py-2 border rounded-lg hover:bg-gray-50 transition-colors">
-                          <Phone className="h-4 w-4 inline mr-2" />
-                          Mobile OTP
-                        </button>
-                        <button className="flex-1 py-2 border rounded-lg hover:bg-gray-50 transition-colors">
-                          <User className="h-4 w-4 inline mr-2" />
-                          Aadhaar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </>
               ) : (
+                // SIGNUP FORM
                 <>
-                  <form className="signup-form" onSubmit={handleSubmit}>
+                  <form className="signup-form" onSubmit={handleSignupSubmit}>
                     <div className="row">
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">First Name</label>
-                        <input type="text" placeholder="First Name" required />
+                        <input 
+                          type="text" 
+                          name="firstName"
+                          value={signupData.firstName}
+                          onChange={handleSignupChange}
+                          placeholder="First Name" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">Middle Name</label>
-                        <input type="text" placeholder="Middle Name" />
+                        <input 
+                          type="text" 
+                          name="middleName"
+                          value={signupData.middleName}
+                          onChange={handleSignupChange}
+                          placeholder="Middle Name" 
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">Last Name</label>
-                        <input type="text" placeholder="Last Name" required />
+                        <input 
+                          type="text" 
+                          name="lastName"
+                          value={signupData.lastName}
+                          onChange={handleSignupChange}
+                          placeholder="Last Name" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                     </div>
 
@@ -315,16 +393,32 @@ const Login = () => {
                           <User className="h-4 w-4" />
                           Gender
                         </label>
-                        <select required>
+                        <select 
+                          name="gender"
+                          value={signupData.gender}
+                          onChange={handleSignupChange}
+                          required
+                          disabled={loading}
+                        >
                           <option value="">Select Gender</option>
-                          <option>Male</option>
-                          <option>Female</option>
-                          <option>Other</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">Age</label>
-                        <input type="number" placeholder="Age" required min="1" max="120" />
+                        <input 
+                          type="number" 
+                          name="age"
+                          value={signupData.age}
+                          onChange={handleSignupChange}
+                          placeholder="Age" 
+                          required 
+                          min="5" 
+                          max="120" 
+                          disabled={loading}
+                        />
                       </div>
                     </div>
 
@@ -334,32 +428,71 @@ const Login = () => {
                           <Calendar className="h-4 w-4" />
                           Date of Birth
                         </label>
-                        <input type="date" required />
+                        <input 
+                          type="date" 
+                          name="dateOfBirth"
+                          value={signupData.dateOfBirth}
+                          onChange={handleSignupChange}
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium flex items-center gap-2">
                           <Globe className="h-4 w-4" />
                           Nationality
                         </label>
-                        <input type="text" placeholder="Nationality" required />
+                        <input 
+                          type="text" 
+                          name="nationality"
+                          value={signupData.nationality}
+                          onChange={handleSignupChange}
+                          placeholder="Nationality" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                     </div>
 
                     <div className="row">
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">State</label>
-                        <input type="text" placeholder="State" required />
+                        <input 
+                          type="text" 
+                          name="state"
+                          value={signupData.state}
+                          onChange={handleSignupChange}
+                          placeholder="State" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium">City</label>
-                        <input type="text" placeholder="City" required />
+                        <input 
+                          type="text" 
+                          name="city"
+                          value={signupData.city}
+                          onChange={handleSignupChange}
+                          placeholder="City" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2 flex-1">
                         <label className="text-sm font-medium flex items-center gap-2">
                           <MapPin className="h-4 w-4" />
                           Pincode
                         </label>
-                        <input type="text" placeholder="Pincode" required />
+                        <input 
+                          type="text" 
+                          name="pincode"
+                          value={signupData.pincode}
+                          onChange={handleSignupChange}
+                          placeholder="Pincode" 
+                          required 
+                          disabled={loading}
+                        />
                       </div>
                     </div>
 
@@ -368,7 +501,15 @@ const Login = () => {
                         <Mail className="h-4 w-4" />
                         Email Address
                       </label>
-                      <input type="email" placeholder="Email" required />
+                      <input 
+                        type="email" 
+                        name="email"
+                        value={signupData.email}
+                        onChange={handleSignupChange}
+                        placeholder="Email" 
+                        required 
+                        disabled={loading}
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -376,11 +517,23 @@ const Login = () => {
                         <Lock className="h-4 w-4" />
                         Password
                       </label>
-                      <input type="password" placeholder="Set Password" required />
+                      <input 
+                        type="password" 
+                        name="password"
+                        value={signupData.password}
+                        onChange={handleSignupChange}
+                        placeholder="Set Password" 
+                        required 
+                        disabled={loading}
+                      />
                     </div>
 
-                    <button type="submit" className="submit-btn">
-                      Create Account
+                    <button 
+                      type="submit" 
+                      className="submit-btn"
+                      disabled={loading}
+                    >
+                      {loading ? "Creating Account..." : "Create Account"}
                     </button>
                   </form>
 
@@ -392,7 +545,7 @@ const Login = () => {
               )}
             </div>
 
-            {/* Right Side - Info Panel */}
+            {/* Right Side - Info Panel (Same as your original) */}
             <div className="bg-gradient-to-br from-purple-50 to-cyan-50 rounded-2xl p-8 flex flex-col justify-center">
               <div className="space-y-6">
                 <div>
@@ -457,7 +610,6 @@ const Login = () => {
       </div>
 
       <Footer />
->>>>>>> 7aa48b6e5569d8be20cd87963604afb7925f0046
     </div>
   );
 };
