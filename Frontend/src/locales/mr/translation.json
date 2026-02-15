@@ -1,0 +1,35 @@
+{
+  "app": {
+    "title": "सिव्हिक व्हॉइस असिस्टंट",
+    "subtitle": "तुमच्या भाषेत सरकारी योजनांबद्दल विचारा"
+  },
+  "voice": {
+    "click_to_speak": "बोलण्यासाठी क्लिक करा",
+    "listening": "ऐकत आहे... थांबवण्यासाठी क्लिक करा",
+    "searching": "\"{{query}}\" शोधत आहे..."
+  },
+  "suggestions": {
+    "pension": "पेन्शन योजना",
+    "health": "आरोग्य संबंधित योजना",
+    "farmer": "शेतकरी योजना",
+    "education": "शिक्षण",
+    "housing": "घरकुल"
+  },
+  "schemes": {
+    "found": "{{count}} योजना सापडल्या",
+    "check_eligibility": "पात्रता तपासा",
+    "view_details": "तपशील पहा"
+  },
+  "eligibility": {
+    "criteria": "पात्रता निकष",
+    "documents": "आवश्यक कागदपत्रे",
+    "benefits": "योजनेचे फायदे",
+    "quick_stats": "त्वरित आकडेवारी",
+    "points": "पात्रता गुण",
+    "documents_required": "आवश्यक कागदपत्रे",
+    "application_process": "अर्ज प्रक्रिया",
+    "need_help": "मदत हवी आहे?",
+    "contact_support": "सहाय्याशी संपर्क साधा",
+    "start_application": "अर्ज सुरू करा"
+  }
+}

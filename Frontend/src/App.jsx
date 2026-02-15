@@ -20,6 +20,8 @@ import Updateprofile from "./pages/UpdateProfile";
 import Register from "./pages/Register";
 import { LanguageProvider } from "./context/LanguageContext";
 import StoryMode from "./pages/StoryMode";
+import './i18n'; // Import i18n configuration
+
 
 const queryClient = new QueryClient();
 
