@@ -18,7 +18,7 @@ import {
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const EligibilityPage = () => {
   const { schemeId } = useParams();
@@ -40,13 +40,16 @@ const EligibilityPage = () => {
     const fetchEligibility = async () => {
       setLoading(true);
       try {
+        // The backend will handle both DB and LLM schemes
         const res = await fetch(
-          `${BACKEND_URL}/api/eligibility/${schemeId}?lang=${language}`
+          `${BACKEND_URL}/api/eligibility/${encodeURIComponent(schemeId)}?lang=${language}`
         );
+        if (!res.ok) throw new Error("Failed to fetch");
         const json = await res.json();
         setData(json);
       } catch (err) {
         console.error(err);
+        setData(null);
       } finally {
         setLoading(false);
       }
@@ -295,14 +298,7 @@ const EligibilityPage = () => {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {(benefits.length > 0 ? benefits : [
-                          "Financial assistance/subsidy",
-                          "Government certification",
-                          "Priority processing",
-                          "Digital tracking of application",
-                          "Dedicated support",
-                          "Renewal benefits"
-                        ]).map((benefit, index) => (
+                        {benefits.map((benefit, index) => (
                           <div 
                             key={index} 
                             className="group flex items-start gap-4 p-5 rounded-xl bg-gradient-to-r from-green-50 to-white hover:from-green-100 transition-all border border-green-100"
@@ -340,7 +336,7 @@ const EligibilityPage = () => {
                   </div>
                   <div className="flex justify-between items-center p-3 rounded-lg bg-green-50">
                     <span className="text-gray-600">Benefits</span>
-                    <span className="font-bold text-green-600">6+</span>
+                    <span className="font-bold text-green-600">{benefits.length}</span>
                   </div>
                 </div>
               </div>

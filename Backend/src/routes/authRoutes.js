@@ -5,13 +5,15 @@ const authController = require('../controllers/authController');
 const { auth } = require('../middleware/auth');
 const {
     registerValidation,
-    loginValidation
+    loginValidation,
+    verifyOTPValidation
 } = require('../middleware/validators');
 
 // Public routes
 router.post('/register', registerValidation, authController.register);
 router.post('/login', loginValidation, authController.login);
-router.post('/login/mobile-otp', authController.loginWithMobileOTP);
+router.post('/verify-otp', verifyOTPValidation, authController.verifyEmailOTP);
+// router.post('/login/mobile-otp', authController.loginWithMobileOTP); // Deprecated/Optional
 
 // Protected routes
 router.get('/profile', auth, authController.getProfile);

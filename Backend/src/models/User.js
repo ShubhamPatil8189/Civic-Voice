@@ -14,7 +14,6 @@ const UserSchema = new mongoose.Schema({
     },
     lastName: {
         type: String,
-        required: [true, 'Last name is required'],
         trim: true
     },
     
@@ -22,7 +21,6 @@ const UserSchema = new mongoose.Schema({
     gender: {
         type: String,
         enum: ['Male', 'Female', 'Other'],
-        required: [true, 'Gender is required']
     },
     age: {
         type: Number,
@@ -36,7 +34,6 @@ const UserSchema = new mongoose.Schema({
     },
     nationality: {
         type: String,
-        required: [true, 'Nationality is required'],
         trim: true,
         default: 'Indian'
     },
@@ -44,17 +41,14 @@ const UserSchema = new mongoose.Schema({
     // Location Information
     state: {
         type: String,
-        required: [true, 'State is required'],
         trim: true
     },
     city: {
         type: String,
-        required: [true, 'City is required'],
         trim: true
     },
     pincode: {
         type: String,
-        required: [true, 'Pincode is required'],
         trim: true,
         match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
     },
@@ -70,7 +64,6 @@ const UserSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        unique: true,
         sparse: true,
         trim: true,
         match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
@@ -79,8 +72,13 @@ const UserSchema = new mongoose.Schema({
     // Authentication
     password: {
         type: String,
-        required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters']
+    },
+    emailOtp: {
+        type: String
+    },
+    emailOtpExpires: {
+        type: Date
     },
     
     // Account Information
@@ -127,6 +125,9 @@ const UserSchema = new mongoose.Schema({
 UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     
+    // If password is not set (e.g. OTP login only), skip hashing
+    if (!this.password) return next();
+
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
