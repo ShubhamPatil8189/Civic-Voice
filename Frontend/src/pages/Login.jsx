@@ -5,8 +5,10 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ArrowLeft, Shield, User, Mail, Lock, Phone } from "lucide-react";
 import { authAPI } from "@/services/api";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
+  const { t } = useTranslation();
   const [isSignup, setIsSignup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +66,7 @@ const Login = () => {
         // Optional: store user
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
-        setSuccess("Login successful! Redirecting...");
+        setSuccess(t('login_page.success_login'));
 
         setTimeout(() => {
           navigate("/profile");
@@ -74,7 +76,7 @@ const Login = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-        "Invalid email or password"
+        t('login_page.error_generic')
       );
     } finally {
       setLoading(false);
@@ -97,7 +99,7 @@ const Login = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
-        setSuccess("Account created successfully!");
+        setSuccess(t('login_page.success_register'));
 
         setTimeout(() => {
           navigate("/profile");
@@ -107,7 +109,7 @@ const Login = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-        "Registration failed"
+        t('login_page.error_generic')
       );
     } finally {
       setLoading(false);
@@ -121,12 +123,12 @@ const Login = () => {
       <div className="flex-1 flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-md">
 
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            {t('login_page.back_to_home')}
           </Link>
 
           <div className="bg-white p-8 rounded-xl shadow-lg">
@@ -134,7 +136,7 @@ const Login = () => {
             <div className="flex items-center gap-3 mb-6">
               <Shield className="h-6 w-6 text-purple-600" />
               <h2 className="text-2xl font-bold">
-                {isSignup ? "Create Account" : "Welcome Back"}
+                {isSignup ? t('login_page.title_signup') : t('login_page.title_login')}
               </h2>
             </div>
 
@@ -146,7 +148,7 @@ const Login = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder={t('login_page.email_placeholder')}
                   value={loginData.email}
                   onChange={handleLoginChange}
                   required
@@ -156,7 +158,7 @@ const Login = () => {
                 <input
                   type="password"
                   name="password"
-                  placeholder="Password"
+                  placeholder={t('login_page.password_placeholder')}
                   value={loginData.password}
                   onChange={handleLoginChange}
                   required
@@ -168,34 +170,34 @@ const Login = () => {
                   disabled={loading}
                   className="w-full bg-purple-600 text-white p-3 rounded-lg"
                 >
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? t('login_page.btn_logging_in') : t('login_page.btn_login')}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleSignupSubmit} className="space-y-4">
 
-                <input name="firstName" placeholder="First Name" value={signupData.firstName} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg"/>
-                <input name="lastName" placeholder="Last Name" value={signupData.lastName} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg"/>
-                <input name="age" type="number" placeholder="Age" value={signupData.age} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg"/>
-                <input name="phone" placeholder="Phone" value={signupData.phone} onChange={handleSignupChange} className="w-full p-3 border rounded-lg"/>
-                <input name="location" placeholder="Location" value={signupData.location} onChange={handleSignupChange} className="w-full p-3 border rounded-lg"/>
-                <input name="occupation" placeholder="Occupation" value={signupData.occupation} onChange={handleSignupChange} className="w-full p-3 border rounded-lg"/>
-                <input name="email" type="email" placeholder="Email" value={signupData.email} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg"/>
-                <input name="password" type="password" placeholder="Password" value={signupData.password} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg"/>
+                <input name="firstName" placeholder={t('register_page.placeholders.first_name')} value={signupData.firstName} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg" />
+                <input name="lastName" placeholder={t('register_page.placeholders.last_name')} value={signupData.lastName} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg" />
+                <input name="age" type="number" placeholder={t('register_page.placeholders.age')} value={signupData.age} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg" />
+                <input name="phone" placeholder={t('register_page.placeholders.phone')} value={signupData.phone} onChange={handleSignupChange} className="w-full p-3 border rounded-lg" />
+                <input name="location" placeholder={t('register_page.placeholders.location')} value={signupData.location} onChange={handleSignupChange} className="w-full p-3 border rounded-lg" />
+                <input name="occupation" placeholder={t('register_page.placeholders.occupation')} value={signupData.occupation} onChange={handleSignupChange} className="w-full p-3 border rounded-lg" />
+                <input name="email" type="email" placeholder={t('login_page.email_placeholder')} value={signupData.email} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg" />
+                <input name="password" type="password" placeholder={t('login_page.password_placeholder')} value={signupData.password} onChange={handleSignupChange} required className="w-full p-3 border rounded-lg" />
 
                 <button type="submit" disabled={loading} className="w-full bg-purple-600 text-white p-3 rounded-lg">
-                  {loading ? "Creating..." : "Register"}
+                  {loading ? t('login_page.btn_creating') : t('login_page.btn_register')}
                 </button>
               </form>
             )}
 
             <p className="text-center mt-4 text-sm">
-              {isSignup ? "Already have an account?" : "Don't have an account?"}
+              {isSignup ? t('login_page.have_account') : t('login_page.no_account')}
               <span
                 className="text-purple-600 cursor-pointer ml-1"
                 onClick={() => setIsSignup(!isSignup)}
               >
-                {isSignup ? "Login" : "Sign Up"}
+                {isSignup ? t('login_page.link_login') : t('login_page.link_signup')}
               </span>
             </p>
 

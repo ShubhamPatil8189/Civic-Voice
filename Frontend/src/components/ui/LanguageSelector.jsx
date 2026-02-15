@@ -1,7 +1,15 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-const LanguageSelector = ({ languages, selected, onSelect, className }) => {
+const LanguageSelector = ({ className }) => {
+  const { i18n } = useTranslation();
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "hi", label: "Hindi" },
+    { code: "mr", label: "Marathi" },
+  ];
+
   return (
     <div
       className={cn(
@@ -11,16 +19,16 @@ const LanguageSelector = ({ languages, selected, onSelect, className }) => {
     >
       {languages.map((lang) => (
         <button
-          key={lang}
-          onClick={() => onSelect(lang)}
+          key={lang.code}
+          onClick={() => i18n.changeLanguage(lang.code)}
           className={cn(
             "px-6 py-2 rounded-full text-sm font-medium transition-all duration-200",
-            selected === lang
+            i18n.language === lang.code
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          {lang}
+          {lang.label}
         </button>
       ))}
     </div>

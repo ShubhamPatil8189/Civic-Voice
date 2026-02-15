@@ -6,7 +6,417 @@
   "voice": {
     "click_to_speak": "Click to Speak",
     "listening": "Listening... Click to Stop",
-    "searching": "Searching for \"{{query}}\"..."
+    "searching": "Searching for \"{{query}}\"...",
+    "not_supported": "Voice recognition not supported in this browser",
+    "listening_in": "Listening in {{label}}... Speak now!",
+    "error_listening": "⚠️ Error listening. Please try typing instead.",
+    "please_speak": "Please speak or type something to search",
+    "server_error": "🌐 Server error. Please try again.",
+    "mic_error": "⚠️ Microphone error. Please try typing.",
+    "stopped": "⏹️ Stopped listening",
+    "speak_now": "🎤 Speak now...",
+    "type_placeholder": "Type your query...",
+    "searching_btn": "Searching...",
+    "suggested": "Suggested Schemes",
+    "detailed_analysis": "Detailed Analysis",
+    "intent": "Intent",
+    "confidence": "Confidence",
+    "missing_info": "Missing info",
+    "follow_up": "Follow-up"
+  },
+  "header": {
+    "home": "Home",
+    "schemes": "Schemes",
+    "about": "About",
+    "help": "Help",
+    "my_profile": "My Profile",
+    "login": "Login",
+    "signup": "Sign Up",
+    "official_platform": "Official Government Platform"
+  },
+  "footer": {
+    "app_name": "Civic Voice Interface",
+    "copyright": "© 2024 CVI Project. Accessible Government for All.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
+  "schemes_page": {
+    "title": "Public Schemes — practical support for everyone",
+    "subtitle": "From health and education to agriculture and small business support — discover schemes that make a tangible difference.",
+    "talk_to_assistant": "Talk to Voice Assistant",
+    "check_eligibility": "Check Eligibility",
+    "active_schemes": "Active schemes",
+    "beneficiaries_helped": "Beneficiaries helped",
+    "farmer_programs": "Farmer programs",
+    "women_child": "Women & child",
+    "search_placeholder": "Search schemes, beneficiaries, keywords...",
+    "filter": "Filter",
+    "tip": "Tip: Try queries like “farmer subsidy”, “women entrepreneurship”, or “school scholarship”",
+    "explore_category": "Explore by Category",
+    "ask_assistant": "Ask Assistant",
+    "why_use": "Why use this platform?",
+    "why_desc": "Quick discovery, minimal paperwork, and step-by-step guidance — built to put citizens first.",
+    "start_assistant": "Start Guided Voice Assistant",
+    "categories": {
+      "scholarship": {
+        "title": "Scholarships & Education",
+        "desc": "Support for students, skill training and vocational programs."
+      },
+      "women": {
+        "title": "Women & Child",
+        "desc": "Health, nutrition, empowerment and safety schemes."
+      },
+      "farmers": {
+        "title": "Farmers & Agriculture",
+        "desc": "Crop support, subsidies, equipment and training."
+      },
+      "business": {
+        "title": "Small Business",
+        "desc": "Loans, MSME support, incubation and market access."
+      },
+      "health": {
+        "title": "Health & Welfare",
+        "desc": "Insurance, maternal care and preventive health programs."
+      },
+      "skills": {
+        "title": "Livelihood & Skills",
+        "desc": "Skill development, apprenticeships and job links."
+      }
+    }
+  },
+  "about_page": {
+    "title": "About Civic Voice Interface",
+    "description": "We make government schemes discoverable and understandable for every citizen — in local languages, with voice-first interactions and step-by-step guidance that reduces friction and paperwork.",
+    "try_voice": "Try Voice Assistant",
+    "explore_schemes": "Explore Schemes",
+    "integrated_access": {
+      "title": "Integrated Access",
+      "desc": "Single place to find schemes, eligibility and steps."
+    },
+    "citizen_centric": {
+      "title": "Citizen-Centric",
+      "desc": "Built for accessibility, local languages and low-bandwidth contexts."
+    },
+    "secure_private": {
+      "title": "Secure & Private",
+      "desc": "Minimal data storage and explicit consent for any personal details."
+    },
+    "mission_title": "Our Mission",
+    "mission_desc_1": "To break down barriers between citizens and government support — by providing clear, conversational, and localized access to schemes and services.",
+    "mission_desc_2": "We focus on inclusion: farmers, women, children, entrepreneurs and vulnerable communities should be able to find help quickly, without navigating complex portals.",
+    "quick_facts": "Quick Facts",
+    "facts": {
+      "schemes": {
+        "count": "350+",
+        "label": "Active schemes indexed"
+      },
+      "beneficiaries": {
+        "count": "120k+",
+        "label": "Beneficiaries reached"
+      },
+      "satisfaction": {
+        "count": "99%",
+        "label": "Satisfaction in guided flows"
+      }
+    },
+    "how_we_work": "How we work",
+    "work_steps": {
+      "discovery": {
+        "title": "Discovery",
+        "desc": "We map schemes, eligibility rules and common applicant journeys so citizens get accurate answers fast."
+      },
+      "guided": {
+        "title": "Guided Steps",
+        "desc": "Stepwise, localized instructions reduce mistakes and the need to revisit offices."
+      },
+      "support": {
+        "title": "Support",
+        "desc": "We connect users to phone and in-person help where automated flows can't complete the process."
+      }
+    },
+    "get_involved": "Get involved",
+    "involved_desc": "If you represent a local government body or an NGO and want to keep scheme information up to date, reach out — we prioritize verified partners.",
+    "contact_us": "Contact Us",
+    "view_summary": "View Your Summary"
+  },
+  "help_page": {
+    "title": "Help & Support",
+    "subtitle": "Find answers, troubleshoot issues, or get in touch with our team.",
+    "search_placeholder": "Search FAQs (e.g., 'eligibility', 'language', 'mobile')...",
+    "quick_support": "Quick Support",
+    "support_channels": {
+      "call": {
+        "title": "Call Us",
+        "desc": "1800-SCHEMES (24/7)",
+        "btn": "Call Now"
+      },
+      "email": {
+        "title": "Email",
+        "desc": "help@civicvoice.gov",
+        "btn": "Send Email"
+      },
+      "chat": {
+        "title": "Chat",
+        "desc": "Live chat available 9am–6pm"
+      },
+      "status": {
+        "title": "Status",
+        "desc": "Check system uptime"
+      }
+    },
+    "faq_title": "Frequently Asked Questions",
+    "no_faqs": "No FAQs match your search. Try different keywords.",
+    "quick_links": {
+      "title": "Quick Links",
+      "voice": {
+        "title": "Voice Assistant",
+        "desc": "Ask in your language"
+      },
+      "schemes": {
+        "title": "Browse Schemes",
+        "desc": "Explore by category"
+      },
+      "eligibility": {
+        "title": "Check Eligibility",
+        "desc": "Get instant answers"
+      },
+      "home": {
+        "title": "Home",
+        "desc": "Back to start"
+      }
+    },
+    "still_need_help": "Still need help?",
+    "help_desc": "Our support team is here to assist. Reach out via phone, email or chat anytime.",
+    "faqs": [
+      {
+        "q": "How do I find schemes I'm eligible for?",
+        "a": "Use the Voice Assistant to describe your situation (e.g., 'I'm a farmer looking for subsidies'), or visit the Schemes page and browse by category. The platform will match you with relevant programs.",
+        "c": "Getting Started"
+      },
+      {
+        "q": "What languages are supported?",
+        "a": "We currently support English, Hindi, and Marathi. You can change language from the language selector in the navbar.",
+        "c": "Features"
+      },
+      {
+        "q": "How do I check my eligibility?",
+        "a": "Click 'Check Eligibility' on any scheme card. Answer simple questions about your income, location, age and occupation. Results are instant.",
+        "c": "Eligibility"
+      },
+      {
+        "q": "Can I save my progress?",
+        "a": "Yes. Visit the Action Summary page to view your previous queries, matched schemes and next steps. No login required.",
+        "c": "Account & Progress"
+      },
+      {
+        "q": "Is my data secure?",
+        "a": "We collect minimal personal data and only with your explicit consent. We never share your information with third parties without permission.",
+        "c": "Privacy & Security"
+      },
+      {
+        "q": "How do I apply for a scheme after finding it?",
+        "a": "Visit the Application Guide for step-by-step instructions, required documents, and links to official portals or offline application centers.",
+        "c": "Application"
+      },
+      {
+        "q": "Can I use this platform on mobile?",
+        "a": "Yes. The platform is fully optimized for mobile and works on both iOS and Android browsers.",
+        "c": "Technical"
+      },
+      {
+        "q": "What if the Voice Assistant doesn't understand me?",
+        "a": "Try the text input option instead, or contact our support team. We're continuously improving our voice recognition.",
+        "c": "Troubleshooting"
+      }
+    ]
+  },
+  "login_page": {
+    "title_signup": "Create Account",
+    "title_login": "Welcome Back",
+    "back_to_home": "Back to Home",
+    "email_placeholder": "Email",
+    "password_placeholder": "Password",
+    "btn_login": "Login",
+    "btn_logging_in": "Logging in...",
+    "btn_register": "Register",
+    "btn_creating": "Creating...",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "link_login": "Login",
+    "link_signup": "Sign Up",
+    "success_login": "Login successful! Redirecting...",
+    "success_register": "Account created successfully!",
+    "error_generic": "Invalid email or password"
+  },
+  "register_page": {
+    "title": "Create Account",
+    "subtitle": "Join CivicAssist to explore government schemes",
+    "labels": {
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "age": "Age",
+      "phone": "Phone Number",
+      "location": "Location",
+      "occupation": "Occupation",
+      "email": "Email",
+      "password": "Password"
+    },
+    "placeholders": {
+      "first_name": "Enter first name",
+      "last_name": "Enter last name",
+      "age": "Enter age",
+      "phone": "Enter phone number",
+      "location": "Enter city/location",
+      "occupation": "Enter occupation",
+      "email": "Enter email address",
+      "password": "Create password (min. 6 characters)"
+    },
+    "btn_register": "Register",
+    "btn_creating": "Creating Account...",
+    "have_account": "Already have an account?",
+    "link_login": "Login",
+    "validation_age": "Please enter a valid age between 5 and 120",
+    "success": "Account created successfully! Redirecting to login...",
+    "error": "Registration failed. Please try again."
+  },
+  "dashboard_page": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}!",
+    "email": "Email: {{email}}",
+    "role": "Role: {{role}}",
+    "logout": "Logout",
+    "loading": "Loading..."
+  },
+  "step_guide_page": {
+    "label": "Government Scheme Process",
+    "title": "Your Step-by-Step Guide",
+    "description": "Follow these essential steps to successfully apply for the government scheme. Each step is carefully designed to ensure smooth processing and timely approval of your application.",
+    "timeline": {
+      "title": "Expected Timeline",
+      "phases": {
+        "prep": "Preparation",
+        "app": "Application",
+        "verify": "Verification",
+        "approval": "Approval"
+      }
+    },
+    "steps_title": "Detailed Steps",
+    "steps": [
+      {
+        "title": "Check Eligibility Criteria",
+        "desc": "Verify that you meet all the basic eligibility requirements including age, income, residency, and other scheme-specific criteria."
+      },
+      {
+        "title": "Gather Required Documents",
+        "desc": "Collect all necessary documents: Aadhar, PAN, address proof, income certificate, caste certificate, and bank account details."
+      },
+      {
+        "title": "Register Online or Offline",
+        "desc": "Submit your application through the official government portal or visit your nearest Taluka/Block office for offline registration."
+      },
+      {
+        "title": "Application Verification",
+        "desc": "Your documents will be verified by government officials. You may be contacted for additional information or verification visits."
+      },
+      {
+        "title": "Pay Processing Fee (if applicable)",
+        "desc": "Pay any mandatory processing fee through online banking, debit card, or at the government office. Keep the receipt for your records."
+      },
+      {
+        "title": "Receive Confirmation & Track Status",
+        "desc": "You'll receive an acknowledgment receipt and registration number. Use this to track your application status online anytime."
+      }
+    ],
+    "estimated_time": "Estimated time",
+    "important_notes": {
+      "title": "Important Things to Remember",
+      "items": [
+        "Keep all original documents safe and maintain copies for your records",
+        "Save your registration number and acknowledgment receipt carefully",
+        "Don't miss any deadlines mentioned in your confirmation letter",
+        "Contact the helpline if you face any issues during the process"
+      ]
+    },
+    "actions": {
+      "ask_voice": "Ask via Voice Assistant",
+      "view_summary": "View Complete Summary",
+      "footer_text": "Need help? Use voice assistant to understand any step in detail"
+    }
+  },
+  "eligibility_page": {
+    "back_to_search": "Back to Search",
+    "back_to_home": "Back to Home",
+    "official_scheme": "Official Government Scheme",
+    "loading": "Loading scheme details...",
+    "no_data": {
+      "title": "No Data Found",
+      "desc": "The requested scheme information is not available."
+    },
+    "tabs": {
+      "eligibility": "Eligibility Criteria",
+      "documents": "Required Documents",
+      "benefits": "Scheme Benefits"
+    },
+    "eligibility_tab": {
+      "title": "Eligibility Criteria",
+      "subtitle": "Check if you qualify for this scheme",
+      "note": "All criteria must be satisfied to be eligible for the scheme."
+    },
+    "documents_tab": {
+      "title": "Required Documents",
+      "subtitle": "Prepare these documents for application",
+      "download_checklist": "Download Document Checklist",
+      "doc_label": "Document"
+    },
+    "benefits_tab": {
+      "title": "Scheme Benefits",
+      "subtitle": "What you get from this scheme"
+    },
+    "sidebar": {
+      "quick_stats": "Quick Stats",
+      "stats": {
+        "eligibility": "Eligibility Points",
+        "documents": "Documents Required",
+        "benefits": "Benefits"
+      },
+      "application_process": "Application Process",
+      "steps": [
+        {
+          "title": "Check Eligibility",
+          "desc": "Verify you meet all criteria"
+        },
+        {
+          "title": "Gather Documents",
+          "desc": "Collect required documents"
+        },
+        {
+          "title": "Online Application",
+          "desc": "Fill application form"
+        },
+        {
+          "title": "Submit & Track",
+          "desc": "Submit and track status"
+        }
+      ],
+      "start_application": "Start Application",
+      "need_help": {
+        "title": "Need Help?",
+        "desc": "Our support team is available to help you with the application process.",
+        "btn": "Contact Support"
+      }
+    },
+    "cta": {
+      "title": "Ready to Apply?",
+      "desc": "Check your eligibility and start your application process now. Our system will guide you through each step.",
+      "check_btn": "Check My Eligibility",
+      "download_btn": "Download Guide"
+    }
+  },
+  "not_found": {
+    "title": "404",
+    "message": "Oops! Page not found",
+    "return_home": "Return to Home"
   },
   "suggestions": {
     "pension": "Pension schemes",
@@ -31,5 +441,50 @@
     "need_help": "Need Help?",
     "contact_support": "Contact Support",
     "start_application": "Start Application"
+  },
+  "landing": {
+    "official_badge": "Official Civic Assistance Platform",
+    "gateway_to": "Your Gateway to",
+    "gov_schemes": "Government Schemes",
+    "hero_description": "Discover, understand, and act on government schemes and civic services through a simple voice-based experience in your native language.",
+    "speak_naturally": "Speak naturally — we'll take care of the rest",
+    "secure_reliable": "Secure • Reliable • Citizen-Centric",
+    "explore_modules": "Explore Platform Modules",
+    "voice_assistant": {
+      "title": "Voice Assistant",
+      "desc": "Talk to the AI assistant for civic help"
+    },
+    "eligibility_check": {
+      "title": "Eligibility Check",
+      "desc": "Know which schemes apply to you"
+    },
+    "guide": {
+      "title": "Application Guide",
+      "desc": "Follow guided steps for applications"
+    },
+    "summary": {
+      "title": "Action Summary",
+      "desc": "View your progress and next actions"
+    },
+    "designed_for": "Designed for Every Citizen",
+    "designed_desc": "A modern, reliable interface to simplify your interaction with government services.",
+    "features": {
+      "ask_language": {
+        "title": "Ask in Your Language",
+        "desc": "Get scheme details in Hindi, Marathi, or English through natural conversation."
+      },
+      "step_assistance": {
+        "title": "Step-by-Step Assistance",
+        "desc": "Clear guidance for eligibility, documents, and next steps — no confusion."
+      },
+      "no_paperwork": {
+        "title": "No Paperwork Hassles",
+        "desc": "Avoid long forms and repeated office visits with smart digital help."
+      },
+      "no_portal": {
+        "title": "No Portal Confusion",
+        "desc": "One platform to access multiple government services and schemes."
+      }
+    }
   }
 }
