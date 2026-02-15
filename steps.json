@@ -1,0 +1,429 @@
+[
+{
+  "_id": "steps_central_001",
+  "schemeId": "central_001",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Visit Bank",
+      "action": "Go to nearest nationalized bank or CSP.",
+      "location": "Bank Branch",
+      "why": "Account opening requires physical verification.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Submit Documents",
+      "action": "Provide Aadhaar and mobile number.",
+      "location": "Bank Counter",
+      "why": "Documents are required for KYC verification.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Account Activation",
+      "action": "Wait for SMS confirmation.",
+      "location": "Home",
+      "why": "Bank verifies details before activation.",
+      "estimatedTime": "1–2 days",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_002",
+  "schemeId": "central_002",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Check Eligibility",
+      "action": "Verify name in PMJAY beneficiary list online.",
+      "location": "CSC Center / Online",
+      "why": "Only listed families are eligible.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Generate Ayushman Card",
+      "action": "Submit Aadhaar for eKYC verification.",
+      "location": "CSC Center",
+      "why": "Card is required for hospital admission.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Avail Treatment",
+      "action": "Visit empanelled hospital.",
+      "location": "Government/Private Hospital",
+      "why": "Only registered hospitals provide cashless treatment.",
+      "estimatedTime": "As per treatment",
+      "difficulty": "Medium"
+    }
+  ]
+},
+{
+  "_id": "steps_central_003",
+  "schemeId": "central_003",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Check Income Eligibility",
+      "action": "Ensure income falls under EWS/LIG category.",
+      "location": "Home",
+      "why": "Income proof determines subsidy eligibility.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Apply Online",
+      "action": "Submit PMAY application form online.",
+      "location": "Online Portal",
+      "why": "Official registration required for subsidy.",
+      "estimatedTime": "1–2 hours",
+      "difficulty": "Medium"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Verification",
+      "action": "Wait for government verification.",
+      "location": "Local Authority",
+      "why": "Application must be approved before benefit transfer.",
+      "estimatedTime": "2–4 weeks",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_mh_001",
+  "schemeId": "mh_001",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Collect Required Documents",
+      "action": "Gather Aadhaar, income certificate, and bank details.",
+      "location": "Home",
+      "why": "Documents are required for verification.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Submit Application",
+      "action": "Apply through government portal or local office.",
+      "location": "Taluka Office / Online",
+      "why": "Application submission is mandatory for benefit approval.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Verification & Approval",
+      "action": "Wait for official verification.",
+      "location": "Government Office",
+      "why": "Authorities verify eligibility before approval.",
+      "estimatedTime": "2–3 weeks",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 4,
+      "title": "Receive Payment",
+      "action": "Check bank account for monthly installment.",
+      "location": "Bank Account",
+      "why": "Amount is directly transferred to beneficiary.",
+      "estimatedTime": "After approval",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_mh_002",
+  "schemeId": "mh_002",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Visit Shiv Bhojan Center",
+      "action": "Locate nearest authorized center.",
+      "location": "Shiv Bhojan Center",
+      "why": "Meals are distributed only at registered centers.",
+      "estimatedTime": "Immediate",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Pay Subsidized Amount",
+      "action": "Pay ₹10 at the counter.",
+      "location": "Center Counter",
+      "why": "Nominal fee ensures affordable meal distribution.",
+      "estimatedTime": "5 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Receive Meal",
+      "action": "Collect food token and meal plate.",
+      "location": "Serving Area",
+      "why": "Token system ensures smooth service.",
+      "estimatedTime": "10 minutes",
+      "difficulty": "Easy"
+    }
+  ]
+},
+
+{
+  "_id": "steps_central_006",
+  "schemeId": "central_006",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Visit Bank",
+      "action": "Go to nearest bank branch offering PMSBY enrollment.",
+      "location": "Bank Branch",
+      "why": "Enrollment is processed through banks.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Submit Consent Form",
+      "action": "Fill and submit insurance consent form.",
+      "location": "Bank Counter",
+      "why": "Authorization required for premium auto-debit.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_007",
+  "schemeId": "central_007",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Check Eligibility",
+      "action": "Ensure age is between 18-50 years.",
+      "location": "Home",
+      "why": "Age eligibility is mandatory.",
+      "estimatedTime": "10 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Enroll via Bank",
+      "action": "Submit enrollment form at bank.",
+      "location": "Bank",
+      "why": "Scheme is linked to bank account.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_008",
+  "schemeId": "central_008",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Open Savings Account",
+      "action": "Ensure active savings bank account.",
+      "location": "Bank",
+      "why": "Pension contributions are auto-debited.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Select Pension Amount",
+      "action": "Choose monthly pension slab.",
+      "location": "Bank",
+      "why": "Contribution depends on pension slab.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_009",
+  "schemeId": "central_009",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Prepare Business Plan",
+      "action": "Create detailed business proposal.",
+      "location": "Home/Consultant",
+      "why": "Loan approval requires business viability.",
+      "estimatedTime": "3-7 days",
+      "difficulty": "Medium"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Apply for Loan",
+      "action": "Submit application at bank branch.",
+      "location": "Bank",
+      "why": "Loans are sanctioned by banks.",
+      "estimatedTime": "2-4 weeks",
+      "difficulty": "Medium"
+    }
+  ]
+},
+{
+  "_id": "steps_central_010",
+  "schemeId": "central_010",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Register on NSP Portal",
+      "action": "Create account on National Scholarship Portal.",
+      "location": "Online",
+      "why": "Registration required before application.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Upload Documents",
+      "action": "Upload mark sheet and income certificate.",
+      "location": "Online",
+      "why": "Documents required for verification.",
+      "estimatedTime": "1 hour",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_011",
+  "schemeId": "central_011",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Visit Common Service Center",
+      "action": "Locate nearest CSC center.",
+      "location": "CSC",
+      "why": "Application processing done via CSC.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Submit Documents",
+      "action": "Provide Aadhaar and required certificates.",
+      "location": "CSC",
+      "why": "Verification required for approval.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_012",
+  "schemeId": "central_012",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Register Online",
+      "action": "Fill online registration form.",
+      "location": "Official Portal",
+      "why": "Official enrollment required.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Verification",
+      "action": "Wait for approval notification.",
+      "location": "Online",
+      "why": "Authorities verify details.",
+      "estimatedTime": "2 weeks",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_013",
+  "schemeId": "central_013",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Check Eligibility",
+      "action": "Confirm age and income criteria.",
+      "location": "Home",
+      "why": "Eligibility determines benefit approval.",
+      "estimatedTime": "15 minutes",
+      "difficulty": "Easy"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Submit Application",
+      "action": "Apply at local office.",
+      "location": "Government Office",
+      "why": "Official registration required.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_central_014",
+  "schemeId": "central_014",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Apply via Bank",
+      "action": "Submit Mudra loan application.",
+      "location": "Bank",
+      "why": "Loans processed through banks.",
+      "estimatedTime": "1-2 weeks",
+      "difficulty": "Medium"
+    }
+  ]
+},
+{
+  "_id": "steps_central_015",
+  "schemeId": "central_015",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Register for Skill Program",
+      "action": "Enroll at authorized training center.",
+      "location": "Training Center",
+      "why": "Skill training requires official registration.",
+      "estimatedTime": "1 day",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_mh_004",
+  "schemeId": "mh_004",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Check Eligibility",
+      "action": "Verify eligibility under MJPJAY.",
+      "location": "Hospital/Online",
+      "why": "Only eligible families can avail benefits.",
+      "estimatedTime": "30 minutes",
+      "difficulty": "Easy"
+    }
+  ]
+},
+{
+  "_id": "steps_mh_005",
+  "schemeId": "mh_005",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "Submit Application",
+      "action": "Apply through child welfare office.",
+      "location": "District Office",
+      "why": "Application must be verified.",
+      "estimatedTime": "1-2 weeks",
+      "difficulty": "Easy"
+    }
+  ]
+}
+]
