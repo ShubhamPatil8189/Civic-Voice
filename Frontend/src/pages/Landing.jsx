@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Languages, FootprintsIcon, FileX, MonitorX, ArrowRight, ShieldCheck, Landmark } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -9,56 +9,51 @@ import LanguageSelector from "@/components/ui/LanguageSelector";
 import { Button } from "@/components/ui/button";
 
 const Landing = () => {
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
-  const languages = ["English", "Hindi", "Marathi"];
+  const { t } = useTranslation();
 
   const features = [
     {
       icon: Languages,
-      title: "Ask in Your Language",
-      description:
-        "Get scheme details in Hindi, Marathi, or English through natural conversation.",
+      title: t('landing.features.ask_language.title'),
+      description: t('landing.features.ask_language.desc'),
     },
     {
       icon: FootprintsIcon,
-      title: "Step-by-Step Assistance",
-      description:
-        "Clear guidance for eligibility, documents, and next steps — no confusion.",
+      title: t('landing.features.step_assistance.title'),
+      description: t('landing.features.step_assistance.desc'),
     },
     {
       icon: FileX,
-      title: "No Paperwork Hassles",
-      description:
-        "Avoid long forms and repeated office visits with smart digital help.",
+      title: t('landing.features.no_paperwork.title'),
+      description: t('landing.features.no_paperwork.desc'),
     },
     {
       icon: MonitorX,
-      title: "No Portal Confusion",
-      description:
-        "One platform to access multiple government services and schemes.",
+      title: t('landing.features.no_portal.title'),
+      description: t('landing.features.no_portal.desc'),
     },
   ];
 
   const pages = [
     {
       path: "/voice-assistant",
-      title: "Voice Assistant",
-      description: "Talk to the AI assistant for civic help",
+      title: t('landing.voice_assistant.title'),
+      description: t('landing.voice_assistant.desc'),
     },
     {
       path: "/eligibility",
-      title: "Eligibility Check",
-      description: "Know which schemes apply to you",
+      title: t('landing.eligibility_check.title'),
+      description: t('landing.eligibility_check.desc'),
     },
     {
       path: "/steps",
-      title: "Application Guide",
-      description: "Follow guided steps for applications",
+      title: t('landing.guide.title'),
+      description: t('landing.guide.desc'),
     },
     {
       path: "/summary",
-      title: "Action Summary",
-      description: "View your progress and next actions",
+      title: t('landing.summary.title'),
+      description: t('landing.summary.desc'),
     },
   ];
 
@@ -94,29 +89,24 @@ const Landing = () => {
             <div className="fancy-hero">
               <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-gradient-to-r from-indigo-100 to-cyan-100 text-indigo-700 text-sm font-medium">
                 <Landmark className="h-4 w-4" />
-                Official Civic Assistance Platform
+                {t('landing.official_badge')}
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                Your Gateway to <span className="text-gradient bg-clip-text feature-title">Government Schemes</span>
+                {t('landing.gateway_to')} <span className="text-gradient bg-clip-text feature-title">{t('landing.gov_schemes')}</span>
               </h1>
 
               <p className="text-lg text-muted-foreground max-w-xl mb-6">
-                Discover, understand, and act on government schemes and civic services
-                through a simple voice-based experience in your native language.
+                {t('landing.hero_description')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">
-                <LanguageSelector
-                  languages={languages}
-                  selected={selectedLanguage}
-                  onSelect={setSelectedLanguage}
-                />
+                <LanguageSelector />
                 <Link to="/voice-assistant">
                   <div className="card-wrap rounded-xl">
                     <div className="glass-card flex items-center gap-3">
-                      <MicButton size="lg" label="Start Voice Assistant" />
-                      <div className="text-sm text-muted-foreground">Speak naturally — we'll take care of the rest</div>
+                      <MicButton size="lg" label={t('landing.voice_assistant.title')} />
+                      <div className="text-sm text-muted-foreground">{t('landing.speak_naturally')}</div>
                     </div>
                   </div>
                 </Link>
@@ -124,7 +114,7 @@ const Landing = () => {
 
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-green-600" />
-                Secure • Reliable • Citizen-Centric
+                {t('landing.secure_reliable')}
               </div>
             </div>
           </div>
@@ -150,7 +140,7 @@ const Landing = () => {
       <section className="py-14 bg-secondary/10">
         <div className="container">
           <h2 className="text-xl font-semibold text-center mb-8">
-            Explore Platform Modules
+            {t('landing.explore_modules')}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -187,11 +177,10 @@ const Landing = () => {
         <div className="container">
           <div className="text-center mb-14">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Designed for Every Citizen
+              {t('landing.designed_for')}
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              A modern, reliable interface to simplify your interaction with
-              government services.
+              {t('landing.designed_desc')}
             </p>
           </div>
 

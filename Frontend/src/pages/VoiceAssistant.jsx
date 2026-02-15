@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { 
+import {
   Globe, FileText, ArrowRight, Mic, Square, Search, Filter, Sparkles, Waves, Zap,
   Brain, AlertCircle, CheckCircle, XCircle, HelpCircle, ListChecks, MessageSquare,
   Send, User, Bot
@@ -29,17 +30,18 @@ const getSessionId = () => {
 };
 
 const VoiceAssistant = () => {
+  const { t, i18n } = useTranslation();
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [assistantText, setAssistantText] = useState("");
-  const [language, setLanguage] = useState(localStorage.getItem("lang") || "en");
+  const [language, setLanguage] = useState(i18n.language || localStorage.getItem("lang") || "en");
   const [matchedSchemes, setMatchedSchemes] = useState([]);
   const [queryText, setQueryText] = useState("");
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [animateCards, setAnimateCards] = useState(false);
   const [geminiResponse, setGeminiResponse] = useState(null);
-  
+
   // Conversation history
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
@@ -47,21 +49,24 @@ const VoiceAssistant = () => {
   const sessionId = getSessionId(); // persistent session ID
 
   const quickSuggestions = [
-    { label: "Pension schemes", query: "pension" },
-    { label: "Health related schemes", query: "health" },
-    { label: "Farmer Schemes", query: "farmer" },
-    { label: "Education", query: "education" },
-    { label: "Housing", query: "housing" },
+    { label: t('suggestions.pension'), query: "pension" },
+    { label: t('suggestions.health'), query: "health" },
+    { label: t('suggestions.farmer'), query: "farmer" },
+    { label: t('suggestions.education'), query: "education" },
+    { label: t('suggestions.housing'), query: "housing" },
   ];
 
   useEffect(() => {
     localStorage.setItem("lang", language);
-  }, [language]);
+    if (i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language, i18n]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setAssistantText("Voice recognition not supported in this browser");
+      setAssistantText(t('voice.not_supported'));
       return;
     }
 
@@ -72,7 +77,7 @@ const VoiceAssistant = () => {
 
     recognition.onstart = () => {
       setIsListening(true);
-      setAssistantText(`🎤 Listening in ${languageConfig[language].label}... Speak now!`);
+      setAssistantText(t('voice.listening_in', { label: languageConfig[language].label }));
     };
 
     recognition.onend = () => {
@@ -87,7 +92,7 @@ const VoiceAssistant = () => {
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
-      setAssistantText("⚠️ Error listening. Please try typing instead.");
+      setAssistantText(t('voice.error_listening'));
       setIsListening(false);
     };
 
@@ -100,7 +105,7 @@ const VoiceAssistant = () => {
 
   const fetchSchemes = async (text) => {
     if (!text || text.trim() === "") {
-      setAssistantText("Please speak or type something to search");
+      setAssistantText(t('voice.please_speak'));
       return;
     }
 
@@ -110,7 +115,7 @@ const VoiceAssistant = () => {
     setIsLoading(true);
     setAnimateCards(false);
     setGeminiResponse(null);
-    setAssistantText(`🔍 Searching for "${text}"...`);
+    setAssistantText(t('voice.searching', { query: text }));
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/voice`, {
@@ -133,8 +138,8 @@ const VoiceAssistant = () => {
           explanation: data.explanation,
           transcript: data.transcript
         });
-        setMessages(prev => [...prev, { 
-          role: "assistant", 
+        setMessages(prev => [...prev, {
+          role: "assistant",
           content: data.explanation,
           followUp: data.intentData.follow_up_question,
           schemes: data.intentData.suggested_schemes,
@@ -143,14 +148,14 @@ const VoiceAssistant = () => {
         }]);
       } else {
         // Database match – add brief message
-        setMessages(prev => [...prev, { 
-          role: "assistant", 
-          content: `Found ${data.matchedSchemes.length} schemes. Click on any to check eligibility.`
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: t('schemes.found', { count: data.matchedSchemes.length })
         }]);
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setAssistantText("🌐 Server error. Please try again.");
+      setAssistantText(t('voice.server_error'));
       setMatchedSchemes([]);
     } finally {
       setIsLoading(false);
@@ -159,18 +164,18 @@ const VoiceAssistant = () => {
 
   const handleMicClick = () => {
     if (!recognitionRef.current) {
-      setAssistantText("Voice recognition not available");
+      setAssistantText(t('voice.not_supported'));
       return;
     }
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
-      setAssistantText("⏹️ Stopped listening");
+      setAssistantText(t('voice.stopped'));
     } else {
       setQueryText("");
-      setAssistantText("🎤 Speak now...");
-      try { recognitionRef.current.start(); } 
-      catch (error) { setAssistantText("⚠️ Microphone error. Please try typing."); }
+      setAssistantText(t('voice.speak_now'));
+      try { recognitionRef.current.start(); }
+      catch (error) { setAssistantText(t('voice.mic_error')); }
     }
   };
 
@@ -185,11 +190,7 @@ const VoiceAssistant = () => {
     fetchSchemes(reply);
   };
 
-  const t = (en, hi, mr) => {
-    if (language === 'hi') return hi;
-    if (language === 'mr') return mr;
-    return en;
-  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-blue-50">
@@ -206,10 +207,10 @@ const VoiceAssistant = () => {
           {/* Simple Hero */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-              Civic Voice Assistant
+              {t('app.title')}
             </h1>
             <p className="text-gray-600 mt-2">
-              Ask about government schemes in your language
+              {t('app.subtitle')}
             </p>
           </div>
 
@@ -219,11 +220,10 @@ const VoiceAssistant = () => {
               <div className={`absolute inset-0 rounded-full ${isListening ? 'animate-ping bg-red-400' : 'bg-gradient-to-r from-blue-500 to-purple-500'} opacity-20`}></div>
               <button
                 onClick={handleMicClick}
-                className={`relative p-8 rounded-full flex items-center justify-center transition-all transform hover:scale-105 ${
-                  isListening
-                    ? 'bg-gradient-to-r from-red-500 to-pink-600 shadow-lg shadow-red-200'
-                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl'
-                }`}
+                className={`relative p-8 rounded-full flex items-center justify-center transition-all transform hover:scale-105 ${isListening
+                  ? 'bg-gradient-to-r from-red-500 to-pink-600 shadow-lg shadow-red-200'
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-xl'
+                  }`}
               >
                 {isListening ? (
                   <Square className="h-12 w-12 text-white" />
@@ -232,7 +232,7 @@ const VoiceAssistant = () => {
                 )}
               </button>
               <p className="mt-2 text-sm font-medium text-gray-700">
-                {isListening ? "Listening... Click to Stop" : "Click to Speak"}
+                {isListening ? t('voice.listening') : t('voice.click_to_speak')}
               </p>
             </div>
 
@@ -250,9 +250,8 @@ const VoiceAssistant = () => {
                   {Object.entries(languageConfig).map(([key, { label }]) => (
                     <button
                       key={key}
-                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                        language === key ? 'bg-blue-50 font-semibold' : ''
-                      }`}
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${language === key ? 'bg-blue-50 font-semibold' : ''
+                        }`}
                       onClick={() => {
                         setLanguage(key);
                         setShowLangDropdown(false);
@@ -296,8 +295,8 @@ const VoiceAssistant = () => {
                   )}
                   <div className={cn(
                     "max-w-[80%] rounded-2xl p-4",
-                    msg.role === "user" 
-                      ? "bg-blue-600 text-white rounded-br-none" 
+                    msg.role === "user"
+                      ? "bg-blue-600 text-white rounded-br-none"
                       : "bg-white border border-gray-200 rounded-bl-none"
                   )}>
                     {msg.role === "assistant" && msg.intentData ? (
@@ -345,16 +344,12 @@ const VoiceAssistant = () => {
                     className="flex-1 py-4 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-lg"
                     value={queryText}
                     onChange={(e) => setQueryText(e.target.value)}
-                    placeholder={
-                      language === 'en' ? "Type your query..." :
-                      language === 'hi' ? "अपना प्रश्न लिखें..." :
-                      "तुमचा प्रश्न टाइप करा..."
-                    }
+                    placeholder={t('voice.type_placeholder')}
                     disabled={isLoading}
                   />
                 </div>
                 <Button type="submit" disabled={!queryText.trim() || isLoading} className="rounded-xl px-8 py-4 m-1 bg-gradient-to-r from-blue-600 to-purple-600">
-                  {isLoading ? "Searching..." : <Zap className="h-4 w-4" />}
+                  {isLoading ? t('voice.searching_btn') : <Zap className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
@@ -364,7 +359,7 @@ const VoiceAssistant = () => {
           {matchedSchemes.length > 0 && (
             <>
               <p className="text-center text-lg font-medium text-gray-700 mb-4">
-                Found {matchedSchemes.length} schemes
+                {t('schemes.found', { count: matchedSchemes.length })}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {matchedSchemes.map((s, index) => {
@@ -378,7 +373,7 @@ const VoiceAssistant = () => {
                       <h3 className="font-bold text-lg mb-2">{s.name || s.name_en}</h3>
                       <p className="text-gray-600 text-sm mb-3 line-clamp-2">{s.description || s.description_en}</p>
                       <span className="text-blue-600 font-medium flex items-center gap-1">
-                        Check eligibility <ArrowRight className="h-4 w-4" />
+                        {t('schemes.check_eligibility')} <ArrowRight className="h-4 w-4" />
                       </span>
                     </Link>
                   );
@@ -390,7 +385,7 @@ const VoiceAssistant = () => {
           {/* Gemini Suggested Schemes (if any) */}
           {geminiResponse?.intentData?.suggested_schemes?.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Suggested Schemes</h3>
+              <h3 className="text-lg font-semibold mb-3">{t('voice.suggested')}</h3>
               <div className="space-y-3">
                 {geminiResponse.intentData.suggested_schemes.map((scheme, idx) => (
                   <Link
@@ -401,7 +396,7 @@ const VoiceAssistant = () => {
                     <h4 className="font-semibold text-gray-800">{scheme.name}</h4>
                     <p className="text-sm text-gray-600 mt-1">{scheme.reason}</p>
                     <span className="text-blue-600 text-sm font-medium flex items-center gap-1 mt-2">
-                      View details <ArrowRight className="h-3 w-3" />
+                      {t('schemes.view_details')} <ArrowRight className="h-3 w-3" />
                     </span>
                   </Link>
                 ))}
@@ -414,15 +409,15 @@ const VoiceAssistant = () => {
             <div className="mb-8 animate-fadeInUp">
               <div className="glass-card rounded-2xl p-6 border border-purple-100">
                 <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-purple-600" /> Detailed Analysis
+                  <Brain className="h-5 w-5 text-purple-600" /> {t('voice.detailed_analysis')}
                 </h3>
-                <p className="text-gray-700 mb-2"><span className="font-semibold">Intent:</span> {geminiResponse.intentData.intent}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">{t('voice.intent')}:</span> {geminiResponse.intentData.intent}</p>
                 {geminiResponse.intentData.confidence && (
-                  <p className="text-sm text-gray-600">Confidence: {(geminiResponse.intentData.confidence * 100).toFixed(0)}%</p>
+                  <p className="text-sm text-gray-600">{t('voice.confidence')}: {(geminiResponse.intentData.confidence * 100).toFixed(0)}%</p>
                 )}
                 {geminiResponse.intentData.missing_fields?.length > 0 && (
                   <div className="mt-2">
-                    <p className="font-semibold">Missing info:</p>
+                    <p className="font-semibold">{t('voice.missing_info')}:</p>
                     <ul className="list-disc pl-5">
                       {geminiResponse.intentData.missing_fields.map((f, i) => (
                         <li key={i} className="text-sm">{f.replace(/_/g, ' ')}</li>
@@ -432,7 +427,7 @@ const VoiceAssistant = () => {
                 )}
                 {geminiResponse.intentData.suggested_schemes?.length > 0 && (
                   <div className="mt-2">
-                    <p className="font-semibold">Suggested schemes:</p>
+                    <p className="font-semibold">{t('voice.suggested')}:</p>
                     <ul className="list-disc pl-5">
                       {geminiResponse.intentData.suggested_schemes.map((s, i) => (
                         <li key={i} className="text-sm"><span className="font-medium">{s.name}</span> – {s.reason}</li>
@@ -442,7 +437,7 @@ const VoiceAssistant = () => {
                 )}
                 {geminiResponse.intentData.follow_up_question && (
                   <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                    <p className="text-purple-800"><span className="font-bold">Follow-up:</span> {geminiResponse.intentData.follow_up_question}</p>
+                    <p className="text-purple-800"><span className="font-bold">{t('voice.follow_up')}:</span> {geminiResponse.intentData.follow_up_question}</p>
                   </div>
                 )}
               </div>

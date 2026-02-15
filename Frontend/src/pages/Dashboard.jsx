@@ -1,23 +1,25 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
 
   return (
     <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px' }}>
-      <h2>Dashboard</h2>
+      <h2>{t('dashboard_page.title')}</h2>
       {user ? (
         <div>
-          <p>Welcome, {user.firstName}!</p>
-          <p>Email: {user.email}</p>
-          <p>Role: {user.role}</p>
+          <p>{t('dashboard_page.welcome', { name: user.firstName })}</p>
+          <p>{t('dashboard_page.email', { email: user.email })}</p>
+          <p>{t('dashboard_page.role', { role: user.role })}</p>
           <button onClick={logout} style={{ padding: '10px 20px' }}>
-            Logout
+            {t('dashboard_page.logout')}
           </button>
         </div>
       ) : (
-        <p>Loading...</p>
+        <p>{t('dashboard_page.loading')}</p>
       )}
     </div>
   );

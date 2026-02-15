@@ -3,17 +3,19 @@ import { Award, Users, Briefcase, Heart, BookOpen, Leaf, Globe, Search } from "l
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-
-const categories = [
-  { icon: Award, title: "Scholarships & Education", count: 48, desc: "Support for students, skill training and vocational programs." },
-  { icon: Users, title: "Women & Child", count: 72, desc: "Health, nutrition, empowerment and safety schemes." },
-  { icon: Leaf, title: "Farmers & Agriculture", count: 95, desc: "Crop support, subsidies, equipment and training." },
-  { icon: Briefcase, title: "Small Business", count: 60, desc: "Loans, MSME support, incubation and market access." },
-  { icon: Heart, title: "Health & Welfare", count: 40, desc: "Insurance, maternal care and preventive health programs." },
-  { icon: BookOpen, title: "Livelihood & Skills", count: 35, desc: "Skill development, apprenticeships and job links." },
-];
+import { useTranslation } from "react-i18next";
 
 const Schemes = () => {
+  const { t } = useTranslation();
+
+  const categories = [
+    { icon: Award, title: t('schemes_page.categories.scholarship.title'), count: 48, desc: t('schemes_page.categories.scholarship.desc') },
+    { icon: Users, title: t('schemes_page.categories.women.title'), count: 72, desc: t('schemes_page.categories.women.desc') },
+    { icon: Leaf, title: t('schemes_page.categories.farmers.title'), count: 95, desc: t('schemes_page.categories.farmers.desc') },
+    { icon: Briefcase, title: t('schemes_page.categories.business.title'), count: 60, desc: t('schemes_page.categories.business.desc') },
+    { icon: Heart, title: t('schemes_page.categories.health.title'), count: 40, desc: t('schemes_page.categories.health.desc') },
+    { icon: BookOpen, title: t('schemes_page.categories.skills.title'), count: 35, desc: t('schemes_page.categories.skills.desc') },
+  ];
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
       <Header variant="landing" />
@@ -41,17 +43,17 @@ const Schemes = () => {
                 <Globe className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold">Public Schemes — practical support for everyone</h1>
-                <p className="text-sm text-muted-foreground mt-1">From health and education to agriculture and small business support — discover schemes that make a tangible difference.</p>
+                <h1 className="text-3xl md:text-4xl font-bold">{t('schemes_page.title')}</h1>
+                <p className="text-sm text-muted-foreground mt-1">{t('schemes_page.subtitle')}</p>
               </div>
             </div>
 
             <div className="mt-4 flex flex-col sm:flex-row gap-3">
               <Button asChild className="px-6 py-3">
-                <Link to="/voice-assistant">Talk to Voice Assistant</Link>
+                <Link to="/voice-assistant">{t('schemes_page.talk_to_assistant')}</Link>
               </Button>
               <Button variant="outline" asChild className="px-6 py-3">
-                <Link to="/eligibility">Check Eligibility</Link>
+                <Link to="/eligibility">{t('schemes_page.check_eligibility')}</Link>
               </Button>
             </div>
 
@@ -61,7 +63,7 @@ const Schemes = () => {
                   <div className="accent-dot bg-indigo-500" />
                   <div>
                     <div className="text-xl font-semibold">350+</div>
-                    <div className="text-xs text-muted-foreground">Active schemes</div>
+                    <div className="text-xs text-muted-foreground">{t('schemes_page.active_schemes')}</div>
                   </div>
                 </div>
               </div>
@@ -70,7 +72,7 @@ const Schemes = () => {
                   <div className="accent-dot bg-cyan-400" />
                   <div>
                     <div className="text-xl font-semibold">120k+</div>
-                    <div className="text-xs text-muted-foreground">Beneficiaries helped</div>
+                    <div className="text-xs text-muted-foreground">{t('schemes_page.beneficiaries_helped')}</div>
                   </div>
                 </div>
               </div>
@@ -79,7 +81,7 @@ const Schemes = () => {
                   <div className="accent-dot bg-emerald-400" />
                   <div>
                     <div className="text-xl font-semibold">95</div>
-                    <div className="text-xs text-muted-foreground">Farmer programs</div>
+                    <div className="text-xs text-muted-foreground">{t('schemes_page.farmer_programs')}</div>
                   </div>
                 </div>
               </div>
@@ -88,7 +90,7 @@ const Schemes = () => {
                   <div className="accent-dot bg-amber-400" />
                   <div>
                     <div className="text-xl font-semibold">72</div>
-                    <div className="text-xs text-muted-foreground">Women & child</div>
+                    <div className="text-xs text-muted-foreground">{t('schemes_page.women_child')}</div>
                   </div>
                 </div>
               </div>
@@ -99,19 +101,19 @@ const Schemes = () => {
             <div className="p-6 bg-gradient-to-tr from-white to-slate-50 rounded-2xl shadow-lg">
               <div className="flex items-center gap-3 mb-4">
                 <div className="relative flex-1">
-                  <input className="search-input w-full pl-10" placeholder="Search schemes, beneficiaries, keywords..." />
+                  <input className="search-input w-full pl-10" placeholder={t('schemes_page.search_placeholder')} />
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 </div>
-                <Button className="px-5 py-3">Filter</Button>
+                <Button className="px-5 py-3">{t('schemes_page.filter')}</Button>
               </div>
 
-              <p className="text-sm text-muted-foreground">Tip: Try queries like “farmer subsidy”, “women entrepreneurship”, or “school scholarship”</p>
+              <p className="text-sm text-muted-foreground">{t('schemes_page.tip')}</p>
             </div>
           </div>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Explore by Category</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-center">{t('schemes_page.explore_category')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((c, i) => (
               <div key={c.title} className="category p-6 bg-white rounded-2xl">
@@ -127,8 +129,8 @@ const Schemes = () => {
                     <p className="mt-2 text-sm text-muted-foreground">{c.desc}</p>
 
                     <div className="mt-4 flex items-center gap-3">
-                      <Button asChild variant="ghost"><Link to="/voice-assistant">Ask Assistant</Link></Button>
-                      <Button asChild variant="outline"><Link to="/eligibility">Check Eligibility</Link></Button>
+                      <Button asChild variant="ghost"><Link to="/voice-assistant">{t('schemes_page.ask_assistant')}</Link></Button>
+                      <Button asChild variant="outline"><Link to="/eligibility">{t('schemes_page.check_eligibility')}</Link></Button>
                     </div>
                   </div>
                 </div>
@@ -140,12 +142,12 @@ const Schemes = () => {
         <section className="py-8 bg-secondary/5 rounded-xl p-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="text-xl font-semibold">Why use this platform?</h3>
-              <p className="text-sm text-muted-foreground">Quick discovery, minimal paperwork, and step-by-step guidance — built to put citizens first.</p>
+              <h3 className="text-xl font-semibold">{t('schemes_page.why_use')}</h3>
+              <p className="text-sm text-muted-foreground">{t('schemes_page.why_desc')}</p>
             </div>
             <div>
-              <Button asChild className="px-6 py-3"> 
-                <Link to="/voice-assistant">Start Guided Voice Assistant</Link>
+              <Button asChild className="px-6 py-3">
+                <Link to="/voice-assistant">{t('schemes_page.start_assistant')}</Link>
               </Button>
             </div>
           </div>

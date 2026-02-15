@@ -4,8 +4,10 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { User, Mail, Lock, Calendar, Phone, MapPin, Briefcase } from "lucide-react";
 import { authAPI } from "@/services/api";
+import { useTranslation } from "react-i18next";
 
 const Register = () => {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -20,7 +22,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
+
   const navigate = useNavigate();
 
   // Handle input change
@@ -37,21 +39,21 @@ const Register = () => {
 
     // Age validation
     if (Number(form.age) < 5 || Number(form.age) > 120) {
-      setError("Please enter a valid age between 5 and 120");
+      setError(t('register_page.validation_age'));
       setLoading(false);
       return;
     }
 
     try {
       console.log("Registering user:", form.email);
-      
+
       const response = await authAPI.register(form);
-      
+
       console.log("Registration response:", response.data);
-      
+
       if (response.data.success) {
-        setSuccess("Account created successfully! Redirecting to login...");
-        
+        setSuccess(t('register_page.success'));
+
         // Clear form
         setForm({
           firstName: "",
@@ -63,7 +65,7 @@ const Register = () => {
           location: "",
           occupation: ""
         });
-        
+
         // Redirect to login after 2 seconds
         setTimeout(() => {
           navigate("/login");
@@ -72,8 +74,8 @@ const Register = () => {
     } catch (err) {
       console.error("Registration error:", err.response?.data || err);
       setError(
-        err.response?.data?.message || 
-        "Registration failed. Please try again."
+        err.response?.data?.message ||
+        t('register_page.error')
       );
     } finally {
       setLoading(false);
@@ -88,9 +90,9 @@ const Register = () => {
         <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8">
           {/* Title */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
+            <h2 className="text-3xl font-bold text-gray-800">{t('register_page.title')}</h2>
             <p className="text-gray-500 mt-2">
-              Join CivicAssist to explore government schemes
+              {t('register_page.subtitle')}
             </p>
           </div>
 
@@ -100,7 +102,7 @@ const Register = () => {
               {error}
             </div>
           )}
-          
+
           {success && (
             <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
               {success}
@@ -111,13 +113,13 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* First Name */}
             <div>
-              <label className="label">First Name</label>
+              <label className="label">{t('register_page.labels.first_name')}</label>
               <div className="inputBox">
                 <User className="icon" />
                 <input
                   name="firstName"
                   type="text"
-                  placeholder="Enter first name"
+                  placeholder={t('register_page.placeholders.first_name')}
                   value={form.firstName}
                   onChange={handleChange}
                   required
@@ -128,13 +130,13 @@ const Register = () => {
 
             {/* Last Name */}
             <div>
-              <label className="label">Last Name</label>
+              <label className="label">{t('register_page.labels.last_name')}</label>
               <div className="inputBox">
                 <User className="icon" />
                 <input
                   name="lastName"
                   type="text"
-                  placeholder="Enter last name"
+                  placeholder={t('register_page.placeholders.last_name')}
                   value={form.lastName}
                   onChange={handleChange}
                   required
@@ -145,13 +147,13 @@ const Register = () => {
 
             {/* Age */}
             <div>
-              <label className="label">Age</label>
+              <label className="label">{t('register_page.labels.age')}</label>
               <div className="inputBox">
                 <Calendar className="icon" />
                 <input
                   name="age"
                   type="number"
-                  placeholder="Enter age"
+                  placeholder={t('register_page.placeholders.age')}
                   value={form.age}
                   onChange={handleChange}
                   required
@@ -164,13 +166,13 @@ const Register = () => {
 
             {/* Phone (New Field) */}
             <div>
-              <label className="label">Phone Number</label>
+              <label className="label">{t('register_page.labels.phone')}</label>
               <div className="inputBox">
                 <Phone className="icon" />
                 <input
                   name="phone"
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder={t('register_page.placeholders.phone')}
                   value={form.phone}
                   onChange={handleChange}
                   disabled={loading}
@@ -180,13 +182,13 @@ const Register = () => {
 
             {/* Location (New Field) */}
             <div>
-              <label className="label">Location</label>
+              <label className="label">{t('register_page.labels.location')}</label>
               <div className="inputBox">
                 <MapPin className="icon" />
                 <input
                   name="location"
                   type="text"
-                  placeholder="Enter city/location"
+                  placeholder={t('register_page.placeholders.location')}
                   value={form.location}
                   onChange={handleChange}
                   disabled={loading}
@@ -196,13 +198,13 @@ const Register = () => {
 
             {/* Occupation (New Field) */}
             <div>
-              <label className="label">Occupation</label>
+              <label className="label">{t('register_page.labels.occupation')}</label>
               <div className="inputBox">
                 <Briefcase className="icon" />
                 <input
                   name="occupation"
                   type="text"
-                  placeholder="Enter occupation"
+                  placeholder={t('register_page.placeholders.occupation')}
                   value={form.occupation}
                   onChange={handleChange}
                   disabled={loading}
@@ -212,13 +214,13 @@ const Register = () => {
 
             {/* Email */}
             <div>
-              <label className="label">Email</label>
+              <label className="label">{t('register_page.labels.email')}</label>
               <div className="inputBox">
                 <Mail className="icon" />
                 <input
                   name="email"
                   type="email"
-                  placeholder="Enter email address"
+                  placeholder={t('register_page.placeholders.email')}
                   value={form.email}
                   onChange={handleChange}
                   required
@@ -229,13 +231,13 @@ const Register = () => {
 
             {/* Password */}
             <div>
-              <label className="label">Password</label>
+              <label className="label">{t('register_page.labels.password')}</label>
               <div className="inputBox">
                 <Lock className="icon" />
                 <input
                   name="password"
                   type="password"
-                  placeholder="Create password (min. 6 characters)"
+                  placeholder={t('register_page.placeholders.password')}
                   value={form.password}
                   onChange={handleChange}
                   required
@@ -246,23 +248,23 @@ const Register = () => {
             </div>
 
             {/* Submit Button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="registerBtn"
               disabled={loading}
             >
-              {loading ? "Creating Account..." : "Register"}
+              {loading ? t('register_page.btn_creating') : t('register_page.btn_register')}
             </button>
           </form>
 
           {/* Login redirect */}
           <p className="text-center text-sm text-gray-600 mt-6">
-            Already have an account?
+            {t('register_page.have_account')}
             <Link
               to="/login"
               className="text-purple-600 font-semibold ml-2 hover:underline"
             >
-              Login
+              {t('register_page.link_login')}
             </Link>
           </p>
         </div>
