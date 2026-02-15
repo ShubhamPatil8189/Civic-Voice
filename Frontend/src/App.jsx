@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from "react-router-dom";
 
 import Landing from "./pages/Landing";
 import VoiceAssistant from "./pages/VoiceAssistant";
@@ -15,8 +15,23 @@ import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/layout/BottomNav";
 import { LanguageProvider } from "./context/LanguageContext";
+import StoryMode from "./pages/StoryMode";
 
 const queryClient = new QueryClient();
+
+// ✅ WRAPPER COMPONENT for StoryMode
+const StoryModeWrapper = () => {
+  const { schemeId } = useParams();
+  const navigate = useNavigate();
+  
+  return (
+    <StoryMode 
+      schemeId={schemeId}
+      onClose={() => navigate('/')}
+      onApply={() => navigate(`/eligibility/${schemeId}`)}
+    />
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -24,33 +39,37 @@ const App = () => (
       <Toaster />
       <Sonner />
       
-<LanguageProvider></LanguageProvider>
-      <BrowserRouter>
-        <div className="pb-16 md:pb-0">
-          <Routes>
-            {/* Landing page */}
-            <Route path="/" element={<Landing />} />
+      <LanguageProvider>
+        <BrowserRouter>
+          <div className="pb-16 md:pb-0">
+            <Routes>
+              {/* Landing page */}
+              <Route path="/" element={<Landing />} />
 
-            {/* Voice assistant */}
-            <Route path="/voice-assistant" element={<VoiceAssistant />} />
-            <Route path="/schemes" element={<Schemes />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/eligibility/:schemeId" element={<Eligibility />} />
-            {/* Steps guide */}
-            <Route path="/steps" element={<StepGuide />} />
+              {/* Voice assistant */}
+              <Route path="/voice-assistant" element={<VoiceAssistant />} />
+              <Route path="/schemes" element={<Schemes />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/eligibility/:schemeId" element={<Eligibility />} />
+              
+              {/* Steps guide */}
+              <Route path="/steps" element={<StepGuide />} />
 
-            {/* Summary page */}
-            <Route path="/summary" element={<Summary />} />
+              {/* Summary page */}
+              <Route path="/summary" element={<Summary />} />
+// Replace the old test-story route with:
+<Route path="/story/:schemeId" element={<StoryMode />} />
 
-            {/* Catch-all 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
+              {/* Catch-all 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
 
-        {/* Bottom navigation */}
-        <BottomNav />
-      </BrowserRouter>
+          {/* Bottom navigation */}
+          <BottomNav />
+        </BrowserRouter>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
