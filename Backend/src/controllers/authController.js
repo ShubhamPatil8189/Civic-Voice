@@ -1,236 +1,136 @@
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
-require('dotenv').config();
+const bcrypt = require('bcryptjs');
 
-// Generate JWT Token
-const generateToken = (userId, role) => {
-    return jwt.sign(
-        { userId, role },
-        process.env.JWT_SECRET || 'your-secret-key-change-this',
-        { expiresIn: '7d' }
-    );
-};
-
-// Register/Signup User
+// @desc    Register new user
+// @route   POST /api/auth/register
 exports.register = async (req, res) => {
     try {
-        // Validate request
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
+        const { firstName, lastName, email, password, age, phone, location, occupation } = req.body;
 
-        const {
-            firstName,
-            middleName,
-            lastName,
-            gender,
-            age,
-            dateOfBirth,
-            nationality,
-            state,
-            city,
-            pincode,
-            email,
-            phone,
-            password
-        } = req.body;
+        console.log('Registration attempt:', email);
 
-        // Check if user already exists
-        const existingUser = await User.findOne({
-            $or: [{ email }, { phone }]
-        });
-
+        // Check if user exists
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'User with this email or phone already exists'
+                message: 'User already exists'
             });
         }
 
-        // Create new user
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create user
         const user = new User({
             firstName,
-            middleName,
             lastName,
-            gender,
-            age,
-            dateOfBirth,
-            nationality,
-            state,
-            city,
-            pincode,
             email,
+            password: hashedPassword,
+            age,
             phone,
-            password
+            location,
+            occupation
         });
 
         await user.save();
 
-        // Generate token
-        const token = generateToken(user._id, user.role);
+        // Set session (this is the key - NO JWT!)
+        req.session.userId = user._id;
+        req.session.userEmail = user.email;
 
-        // Remove password from response
-        const userResponse = user.toObject();
-        delete userResponse.password;
+        console.log('✅ User registered successfully:', email);
+        console.log('Session created:', req.session.id);
 
         res.status(201).json({
             success: true,
             message: 'Registration successful',
-            token,
-            user: userResponse
+            user: {
+                _id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                age: user.age,
+                phone: user.phone,
+                location: user.location,
+                occupation: user.occupation
+            }
         });
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error during registration',
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// Login User
+// @desc    Login user
+// @route   POST /api/auth/login
 exports.login = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
-
         const { email, password } = req.body;
+
+        console.log('Login attempt:', email);
 
         // Find user
         const user = await User.findOne({ email });
-        
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid credentials'
+                message: 'Invalid email or password'
             });
         }
 
-        // Check if account is locked
-        if (user.isLocked()) {
-            return res.status(423).json({
-                success: false,
-                message: 'Account is locked. Try again later.'
-            });
-        }
-
-        // Check if account is active
-        if (!user.isActive) {
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({
                 success: false,
-                message: 'Account is deactivated'
+                message: 'Invalid email or password'
             });
         }
 
-        // Verify password
-        const isPasswordValid = await user.comparePassword(password);
-        
-        if (!isPasswordValid) {
-            // Increment login attempts
-            await user.incLoginAttempts();
-            
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
-        }
+        // Set session (NO JWT!)
+        req.session.userId = user._id;
+        req.session.userEmail = user.email;
 
-        // Reset login attempts on successful login
-        await user.resetLoginAttempts();
-
-        // Generate token
-        const token = generateToken(user._id, user.role);
-
-        // Remove password from response
-        const userResponse = user.toObject();
-        delete userResponse.password;
+        console.log('✅ User logged in successfully:', email);
+        console.log('Session ID:', req.session.id);
 
         res.json({
             success: true,
             message: 'Login successful',
-            token,
-            user: userResponse
+            user: {
+                _id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                age: user.age,
+                phone: user.phone,
+                location: user.location,
+                occupation: user.occupation
+            }
         });
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error during login',
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// Login with Mobile OTP (simplified version)
-exports.loginWithMobileOTP = async (req, res) => {
+// @desc    Get current user (using session)
+// @route   GET /api/auth/me
+exports.getCurrentUser = async (req, res) => {
     try {
-        const { phone } = req.body;
-
-        // In real app, you would verify OTP here
-        // For now, we'll just find/create user
-
-        let user = await User.findOne({ phone });
-
-        if (!user) {
-            // Create new user if doesn't exist
-            user = new User({
-                phone,
-                firstName: 'User',
-                lastName: 'Mobile',
-                gender: 'Other',
-                age: 25,
-                dateOfBirth: new Date('1998-01-01'),
-                nationality: 'Indian',
-                state: 'Maharashtra',
-                city: 'Pune',
-                pincode: '411001',
-                email: `${phone}@mobile.user`,
-                password: Math.random().toString(36).slice(-8) // Random password
+        // Check if user is logged in via session
+        if (!req.session.userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not logged in'
             });
-            await user.save();
         }
 
-        // Generate token
-        const token = generateToken(user._id, user.role);
-
-        const userResponse = user.toObject();
-        delete userResponse.password;
-
-        res.json({
-            success: true,
-            message: 'Mobile OTP login successful',
-            token,
-            user: userResponse
-        });
-
-    } catch (error) {
-        console.error('Mobile OTP login error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error during mobile OTP login',
-            error: error.message
-        });
-    }
-};
-
-// Get current user profile
-exports.getProfile = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId).select('-password');
-        
+        const user = await User.findById(req.session.userId);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -240,149 +140,99 @@ exports.getProfile = async (req, res) => {
 
         res.json({
             success: true,
-            user
+            user: {
+                _id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                age: user.age,
+                phone: user.phone,
+                location: user.location,
+                occupation: user.occupation,
+                bio: user.bio
+            }
         });
 
     } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message
-        });
+        console.error('Get user error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// Update profile
+// @desc    Update profile
+// @route   PUT /api/auth/profile
 exports.updateProfile = async (req, res) => {
     try {
-        const updates = req.body;
-        const userId = req.user.userId;
-
-        // Don't allow updating email, password, or role via this endpoint
-        delete updates.email;
-        delete updates.password;
-        delete updates.role;
-
-        const user = await User.findByIdAndUpdate(
-            userId,
-            { $set: updates },
-            { new: true, runValidators: true }
-        ).select('-password');
-
-        if (!user) {
-            return res.status(404).json({
+        if (!req.session.userId) {
+            return res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: 'Not logged in'
             });
         }
+
+        const updates = req.body;
+        delete updates.password; // Don't allow password update here
+        delete updates.email; // Don't allow email update
+
+        const user = await User.findByIdAndUpdate(
+            req.session.userId,
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
 
         res.json({
             success: true,
             message: 'Profile updated successfully',
-            user
+            user: {
+                _id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                age: user.age,
+                phone: user.phone,
+                location: user.location,
+                occupation: user.occupation,
+                bio: user.bio
+            }
         });
 
     } catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message
-        });
+        console.error('Update error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// Change password
-exports.changePassword = async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const userId = req.user.userId;
-
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Verify current password
-        const isPasswordValid = await user.comparePassword(currentPassword);
-        
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: 'Current password is incorrect'
-            });
-        }
-
-        // Update password
-        user.password = newPassword;
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Password changed successfully'
-        });
-
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message
-        });
-    }
-};
-
-// Logout (client-side only, but we can invalidate token if needed)
+// @desc    Logout (destroy session)
+// @route   POST /api/auth/logout
 exports.logout = async (req, res) => {
-    try {
-        // In a real app, you might want to:
-        // 1. Add token to blacklist
-        // 2. Update user's last logout time
-        // For now, we'll just respond successfully
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: 'Logout failed'
+            });
+        }
         
+        res.clearCookie('connect.sid');
         res.json({
             success: true,
             message: 'Logged out successfully'
         });
-
-    } catch (error) {
-        console.error('Logout error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message
-        });
-    }
+    });
 };
 
-// Verify token (for checking if user is logged in)
-exports.verifyToken = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId).select('-password');
-        
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
+// @desc    Check if logged in
+// @route   GET /api/auth/check
+exports.checkAuth = async (req, res) => {
+    if (req.session.userId) {
         res.json({
             success: true,
-            user,
-            isValid: true
+            loggedIn: true
         });
-
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: 'Token invalid or expired',
-            isValid: false
+    } else {
+        res.json({
+            success: true,
+            loggedIn: false
         });
     }
 };
