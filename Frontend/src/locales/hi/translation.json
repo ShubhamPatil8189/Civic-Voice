@@ -1,0 +1,35 @@
+{
+  "app": {
+    "title": "सिविक वॉयस असिस्टेंट",
+    "subtitle": "अपनी भाषा में सरकारी योजनाओं के बारे में पूछें"
+  },
+  "voice": {
+    "click_to_speak": "बोलने के लिए क्लिक करें",
+    "listening": "सुन रहा हूँ... रोकने के लिए क्लिक करें",
+    "searching": "\"{{query}}\" खोज रहा हूँ..."
+  },
+  "suggestions": {
+    "pension": "पेंशन योजनाएं",
+    "health": "स्वास्थ्य संबंधी योजनाएं",
+    "farmer": "किसान योजनाएं",
+    "education": "शिक्षा",
+    "housing": "आवास"
+  },
+  "schemes": {
+    "found": "{{count}} योजनाएं मिलीं",
+    "check_eligibility": "पात्रता जांचें",
+    "view_details": "विवरण देखें"
+  },
+  "eligibility": {
+    "criteria": "पात्रता मापदंड",
+    "documents": "आवश्यक दस्तावेज",
+    "benefits": "योजना के लाभ",
+    "quick_stats": "त्वरित आंकड़े",
+    "points": "पात्रता अंक",
+    "documents_required": "आवश्यक दस्तावेज",
+    "application_process": "आवेदन प्रक्रिया",
+    "need_help": "सहायता चाहिए?",
+    "contact_support": "सहायता से संपर्क करें",
+    "start_application": "आवेदन शुरू करें"
+  }
+}

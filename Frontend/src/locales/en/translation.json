@@ -1,0 +1,35 @@
+{
+  "app": {
+    "title": "Civic Voice Assistant",
+    "subtitle": "Ask about government schemes in your language"
+  },
+  "voice": {
+    "click_to_speak": "Click to Speak",
+    "listening": "Listening... Click to Stop",
+    "searching": "Searching for \"{{query}}\"..."
+  },
+  "suggestions": {
+    "pension": "Pension schemes",
+    "health": "Health related schemes",
+    "farmer": "Farmer Schemes",
+    "education": "Education",
+    "housing": "Housing"
+  },
+  "schemes": {
+    "found": "Found {{count}} schemes",
+    "check_eligibility": "Check eligibility",
+    "view_details": "View details"
+  },
+  "eligibility": {
+    "criteria": "Eligibility Criteria",
+    "documents": "Required Documents",
+    "benefits": "Scheme Benefits",
+    "quick_stats": "Quick Stats",
+    "points": "Eligibility Points",
+    "documents_required": "Documents Required",
+    "application_process": "Application Process",
+    "need_help": "Need Help?",
+    "contact_support": "Contact Support",
+    "start_application": "Start Application"
+  }
+}
