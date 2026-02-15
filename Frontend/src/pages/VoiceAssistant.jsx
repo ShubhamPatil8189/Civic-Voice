@@ -194,7 +194,6 @@ const VoiceAssistant = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-blue-50">
       <Header variant="landing" />
-
       {/* Animated background elements */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
