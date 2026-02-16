@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { authAPI } from "@/services/api"; // Added
 
 const Schemes = () => {
   const { t } = useTranslation();
@@ -27,23 +28,29 @@ const Schemes = () => {
   const handleCheckEligibility = async (schemeName) => {
     setCheckingId(schemeName);
     try {
-      const mockUserProfile = {
-        age: 28,
-        income: 150000,
-        gender: "Female",
-        state: "Maharashtra",
-        occupation: "Farmer"
-      };
+      // Fetch Real User Profile
+      let userProfile = {};
+      try {
+        const userRes = await authAPI.getCurrentUser();
+        if (userRes.data && userRes.data.user) {
+          userProfile = userRes.data.user;
+        } else {
+          throw new Error("User not found");
+        }
+      } catch (authErr) {
+        alert("Please login to check eligibility securely.");
+        setCheckingId(null);
+        return;
+      }
 
       // Since we don't have full scheme data here, we just pass the name
       // The backend will fetch DB scheme or hallucinate based on name (if strictly needed, but better to fetch details first)
-      // Actually, for better accuracy, let's fetch the details first or let backend handle it by ID/Name
       const res = await fetch(`${BACKEND_URL}/api/eligibility/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          schemeData: { name_en: schemeName }, // Minimal data, backend engine needs to be robust
-          userProfile: mockUserProfile
+          schemeData: { name_en: schemeName },
+          userProfile: userProfile
         })
       });
 

@@ -46,7 +46,12 @@ const App = () => (
       <Sonner />
 
       <LanguageProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <div className="pb-16 md:pb-0">
             <Routes>
               {/* Landing page */}

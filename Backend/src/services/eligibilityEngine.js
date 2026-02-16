@@ -34,9 +34,14 @@ const checkLLM = async (scheme, user) => {
     User Profile:
     - Age: ${user.age || "Unknown"}
     - Income: ${user.income || "Unknown"}
-    - Gender: ${user.gender || "Unknown"}
-    - State: ${user.state || "Unknown"}
+    - Location: ${user.location || user.state || "Unknown"}
     - Occupation: ${user.occupation || "Unknown"}
+    - BPL Card Holder: ${user.bplCardHolder ? "Yes" : "No"}
+    - Disability: ${user.disability ? "Yes" : "No"}
+    - Student: ${user.student ? "Yes" : "No"}
+    - Veteran: ${user.veteran ? "Yes" : "No"}
+    - Household Type: ${user.householdType || "Unknown"}
+    - Car Owner: ${user.carOwner ? "Yes" : "No"}
 
     Based STRICTLY on the description, is the user eligible?
     - If eligible, say "Eligible".

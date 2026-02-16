@@ -20,6 +20,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 import { useTranslation } from "react-i18next";
+import axios from "axios";
+import { authAPI } from "@/services/api"; // Added
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -35,21 +37,33 @@ const EligibilityPage = () => {
   const handleCheckEligibility = async () => {
     setChecking(true);
     try {
-      // Mock User Profile for now (later fetch from Auth Context)
-      const mockUserProfile = {
-        age: 28,
-        income: 150000,
-        gender: "Female",
-        state: "Maharashtra",
-        occupation: "Farmer"
-      };
+      // Fetch Real User Profile
+      let userProfile = {};
+      try {
+        const userRes = await authAPI.getCurrentUser();
+        if (userRes.data && userRes.data.user) {
+          userProfile = userRes.data.user;
+        } else {
+          throw new Error("User not found");
+        }
+      } catch (authErr) {
+        // If not logged in, we could redirect or ask for login
+        // For now, let's just alert
+        alert("Please login to check eligibility securely.");
+        // Optional: Redirect to login
+        // window.location.href = "/login"; 
+        // Or facilitate a quick login modal 
+        // For now, continuing with empty profile which might still work for some checks or fail gracefully
+        setChecking(false);
+        return;
+      }
 
       const res = await fetch(`${BACKEND_URL}/api/eligibility/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          schemeData: { ...data, eligibilityCriteria: eligibilityCriteria }, // Pass normalized data
-          userProfile: mockUserProfile
+          schemeData: { ...data, eligibilityCriteria: eligibilityCriteria },
+          userProfile: userProfile
         })
       });
 
@@ -63,19 +77,13 @@ const EligibilityPage = () => {
     }
   };
 
-
-
+  // Fetch scheme + steps from backend
   useEffect(() => {
-    const fetchEligibility = async () => {
+    const fetchScheme = async () => {
       setLoading(true);
       try {
-        // The backend will handle both DB and LLM schemes
-        const res = await fetch(
-          `${BACKEND_URL}/api/eligibility/${encodeURIComponent(schemeId)}?lang=${i18n.language}`
-        );
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
+        const res = await axios.get(`${BACKEND_URL}/api/eligibility/${schemeId}?lang=${i18n.language}`);
+        setData(res.data);
       } catch (err) {
         console.error(err);
         setData(null);
@@ -83,7 +91,7 @@ const EligibilityPage = () => {
         setLoading(false);
       }
     };
-    fetchEligibility();
+    fetchScheme();
   }, [schemeId, i18n.language]);
 
   if (loading) {
@@ -121,7 +129,7 @@ const EligibilityPage = () => {
     );
   }
 
-  const { name, description, eligibilityCriteria = [], requiredDocuments = [], benefits = [], category } = data;
+  const { name, description, eligibilityCriteria = [], requiredDocuments = [], benefits = [], category, steps = [] } = data;
 
   const languageLabels = {
     en: { label: "English", flag: "🇺🇸" },
@@ -216,50 +224,16 @@ const EligibilityPage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               {/* Eligibility Tab */}
               {activeTab === "eligibility" && (
-                <div className="space-y-6">
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="p-8">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100">
-                          <UserCheck className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-800">{t('eligibility_page.eligibility_tab.title')}</h2>
-                          <p className="text-gray-600">{t('eligibility_page.eligibility_tab.subtitle')}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        {eligibilityCriteria.map((criterion, index) => (
-                          <div
-                            key={index}
-                            className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 transition-all border border-blue-100 group"
-                          >
-                            <div className="flex-shrink-0 mt-1">
-                              <CheckCircle className="h-5 w-5 text-green-500" />
-                            </div>
-                            <div>
-                              <p className="text-gray-800 font-medium">{criterion}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-8 space-y-6">
+                  {eligibilityCriteria.map((criterion, index) => (
+                    <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 transition-all border border-blue-100 group">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                      <p className="text-gray-800 font-medium">{criterion}</p>
                     </div>
-
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-t border-blue-100 p-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-white">
-                          <AlertCircle className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-semibold">Note:</span> {t('eligibility_page.eligibility_tab.note')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
 
@@ -367,25 +341,25 @@ const EligibilityPage = () => {
                 </div>
               </div>
 
-              {/* Application Process */}
+              {/* Application Steps */}
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">{t('eligibility_page.sidebar.application_process')}</h3>
                 <div className="space-y-3">
-                  {(t('eligibility_page.sidebar.steps', { returnObjects: true }) || []).map((item, index) => (
-                    <div key={index} className="flex items-start gap-3">
+                  {steps.map((step, index) => (
+                    <div key={step._id} className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                         <span className="text-white text-sm font-bold">{index + 1}</span>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800">{item.title}</p>
-                        <p className="text-sm text-gray-600">{item.desc}</p>
+                        <p className="font-medium text-gray-800">{step.title}</p>
+                        <p className="text-sm text-gray-600">{step.action}</p>
+                        {step.location && <p className="text-sm text-gray-500"><em>Location:</em> {step.location}</p>}
+                        {step.why && <p className="text-sm text-gray-500"><em>Why:</em> {step.why}</p>}
+                        {step.estimatedTime && <p className="text-sm text-gray-500"><em>Estimated Time:</em> {step.estimatedTime}</p>}
                       </div>
                     </div>
                   ))}
                 </div>
-                <button className="w-full mt-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
-                  {t('eligibility_page.sidebar.start_application')}
-                </button>
               </div>
 
               {/* Need Help */}

@@ -34,7 +34,15 @@ const VoiceAssistant = () => {
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [assistantText, setAssistantText] = useState("");
-  const [language, setLanguage] = useState(i18n.language || localStorage.getItem("lang") || "en");
+  // Helper to ensure valid language key
+  const getValidLanguage = (lang) => {
+    if (!lang) return "en";
+    if (languageConfig[lang]) return lang;
+    const shortLang = lang.split("-")[0];
+    return languageConfig[shortLang] ? shortLang : "en";
+  };
+
+  const [language, setLanguage] = useState(getValidLanguage(i18n.language || localStorage.getItem("lang")));
   const [matchedSchemes, setMatchedSchemes] = useState([]);
   const [queryText, setQueryText] = useState("");
   const [showLangDropdown, setShowLangDropdown] = useState(false);
