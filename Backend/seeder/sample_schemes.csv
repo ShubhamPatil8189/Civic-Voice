@@ -1,0 +1,28 @@
+scheme_name,slug,details,benefits,eligibility,application,documents,level,schemeCategory
+Pradhan Mantri Kisan Samman Nidhi,pm-kisan,"Income support to all landholding farmers' families to supplement their financial needs for procuring various inputs and other needs related to agriculture and allied activities as well as domestic needs.","₹6000 per year in three equal installments of ₹2000 each; Direct Benefit Transfer to farmer's bank account","All landholding farmers' families irrespective of the size of their land holdings; Exclusion categories include institutional land holders, farmer families with one or more members who are income tax payees, government employees, pensioners","1. Self-registration on PM-KISAN Portal (https://pmkisan.gov.in)
+2. Fill in Aadhaar number, bank account details
+3. Verify land records
+4. Submit application
+5. Track status online","Aadhaar card; Land ownership documents; Bank account details with IFSC code; Mobile number linked to Aadhaar",Central,Agriculture
+Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana,pmjay,"World's largest health insurance scheme providing coverage of Rs. 5 lakhs per family per year for secondary and tertiary care hospitalization.","Health cover of Rs. 5 lakh per family per year; Cashless treatment at empanelled hospitals; Coverage for pre and post-hospitalization expenses; No restrictions on family size, age or gender","Households identified as per SECC 2011 database; Rural: Families with only one room, kutcha walls/roof, no adult member 16-59 years, female headed households, disabled member, SC/ST households, landless households with casual labor; Urban: Rag pickers, beggars, domestic workers, street vendors, construction workers, etc.","1. Check eligibility at https://pmjay.gov.in
+2. Get Ayushman Card from nearest Ayushman Mitra
+3. Visit any empanelled hospital with Ayushman Card
+4. Hospital verifies eligibility and provides cashless treatment","Aadhaar card; Ration card; Proof of residence; Mobile number; Family details",Central,Healthcare
+Sukanya Samriddhi Yojana,ssy,"Government savings scheme for girl child with attractive interest rates and tax benefits under Section 80C.","High interest rate (currently 8%+ p.a.); Tax exemption on deposits, interest earned and maturity amount (EEE category); Minimum deposit ₹250, maximum ₹1.5 lakh per year","Account can be opened in the name of a girl child from birth till she attains the age of 10 years; Only two accounts permitted per family (three in case of twins/triplets); Guardian must be a parent or legal guardian",
+"1. Visit nearest Post Office or authorized bank
+2. Fill account opening form
+3. Submit documents and initial deposit (minimum ₹250)
+4. Deposit annually till 15 years
+5. Partial withdrawal allowed after girl turns 18
+6. Full maturity after 21 years","Birth certificate of girl child; Identity proof of guardian (Aadhaar, PAN, Passport); Address proof of guardian; Passport size photos",Central,Savings
+Atal Pension Yojana,apy,"Pension scheme for unorganized sector workers providing guaranteed minimum pension after 60 years of age.","Guaranteed monthly pension of ₹1000 to ₹5000 depending on contribution; Pension to spouse after subscriber's death; Return of corpus to nominee after death of both subscriber and spouse; Government co-contribution for eligible subscribers","Indian citizen aged 18-40 years; Should not be covered under any statutory social security scheme; Should not be an income tax payer; Must have savings bank account or post office savings account","1. Visit any bank or post office where you have account
+2. Fill APY registration form
+3. Provide Aadhaar and bank account details
+4. Choose pension amount (₹1000-₹5000)
+5. Authorize auto-debit for monthly/quarterly contributions","Aadhaar card; Bank account details; Mobile number; Nominee details; Age proof",Central,Pension
+PM Awas Yojana - Urban,pmay-urban,"Housing for All scheme providing financial assistance for construction/purchase of house to urban poor.","Interest subsidy on home loans; Subsidy up to ₹2.67 lakh for EWS/LIG categories; Direct assistance for house construction; Affordable housing in partnership with private developers","EWS (Annual income up to ₹3 lakh); LIG (Annual income ₹3-6 lakh); MIG-I (Annual income ₹6-12 lakh); MIG-II (Annual income ₹12-18 lakh); Family should not own pucca house anywhere in India; First-time home buyer","1. Register on PMAY portal (https://pmaymis.gov.in)
+2. Fill online application with personal and income details
+3. Upload required documents
+4. Submit application
+5. Track application status
+6. Upon approval, avail subsidy through lending institution","Aadhaar card; Income certificate; Property documents; Bank account details; Caste certificate (if applicable); Self-declaration of not owning house",Central,Housing
