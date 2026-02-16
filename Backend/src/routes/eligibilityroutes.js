@@ -73,11 +73,19 @@ function generateFallbackData(schemeName, lang) {
 }
 
 // Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
+const Step = require("../models/Step"); // Import Step model
+
+// ... (existing imports and setup)
+
+// Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
 router.get("/:schemeId", async (req, res) => {
   try {
     const { schemeId } = req.params;
     const lang = req.query.lang || "en";
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(schemeId);
+
+    let schemeData = null;
+    let stepsData = [];
 
     // 1️⃣ Database scheme
     if (isObjectId) {
@@ -131,29 +139,14 @@ router.get("/:schemeId", async (req, res) => {
       llmData = generateFallbackData(schemeId, lang);
     }
 
-    // Ensure all fields exist
+    // Ensure ID is set
     llmData._id = schemeId;
-    llmData.name = llmData.name || schemeId;
-    llmData.description = llmData.description || "Government scheme for citizen welfare.";
-    llmData.category = llmData.category || "General";
-    llmData.eligibilityCriteria = llmData.eligibilityCriteria?.length ? llmData.eligibilityCriteria : ["Check official website"];
-    llmData.benefits = llmData.benefits?.length ? llmData.benefits : ["Financial assistance"];
-    llmData.requiredDocuments = llmData.requiredDocuments?.length ? llmData.requiredDocuments : ["Identity proof", "Address proof"];
 
     return res.json(llmData);
 
   } catch (err) {
-    console.error("Unhandled error in eligibility route:", err);
-    // Ultimate fallback – always return something
-    return res.json({
-      _id: req.params.schemeId,
-      name: req.params.schemeId,
-      description: "Service temporarily unavailable. Please try again later.",
-      category: "General",
-      eligibilityCriteria: ["Please check official sources"],
-      benefits: ["Please check official sources"],
-      requiredDocuments: ["Please check official sources"]
-    });
+    console.error("Route error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
