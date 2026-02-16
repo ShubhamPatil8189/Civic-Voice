@@ -1,8 +1,28 @@
 const Scheme = require("../models/Scheme");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
+const UniqueQuery = require("../models/UniqueQuery");
 const { analyzeIntent } = require("../services/geminiService");
 const { checkEligibility } = require("../services/eligibilityEngine");
+
+// Simple query normalization
+const normalizeQuery = (query) => {
+  return query.toLowerCase().trim().replace(/[^\w\s]/g, '');
+};
+
+// Check if two queries are similar (basic implementation)
+const areSimilar = (q1, q2) => {
+  const norm1 = normalizeQuery(q1);
+  const norm2 = normalizeQuery(q2);
+
+  // Exact match
+  if (norm1 === norm2) return true;
+
+  // Check if one contains the other
+  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+
+  return false;
+};
 
 exports.processVoice = async (req, res) => {
   try {
@@ -11,6 +31,34 @@ exports.processVoice = async (req, res) => {
 
     if (!text || text.trim() === "") {
       return res.status(400).json({ error: "No text provided" });
+    }
+
+    // Track unique queries for FAQ generation
+    if (text && text.trim() !== "") {
+      try {
+        const normalized = normalizeQuery(text);
+
+        // Use findOneAndUpdate with upsert for atomic operation
+        await UniqueQuery.findOneAndUpdate(
+          { normalizedQuery: normalized },
+          {
+            $set: {
+              originalQuery: text,
+              lastSearched: new Date(),
+              language: language || "en"
+            },
+            $inc: { searchCount: 1 },
+            $addToSet: { relatedQueries: text }
+          },
+          {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true
+          }
+        );
+      } catch (queryErr) {
+        console.error("Query tracking error:", queryErr);
+      }
     }
 
     // Retrieve conversation history (last 5 messages)
@@ -52,6 +100,7 @@ exports.processVoice = async (req, res) => {
         language,
         intentData,
         eligibility,
+        explanation: intentData.explanation,
         matchedSchemes: [],
         source: "gemini"
       };

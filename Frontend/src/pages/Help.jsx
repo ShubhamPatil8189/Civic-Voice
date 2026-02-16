@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const Help = () => {
   const { t } = useTranslation();
@@ -118,6 +118,8 @@ const Help = () => {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        .support-card { padding: 1.5rem; background: white; border-radius: 1rem; box-shadow: 0 6px 18px rgba(2,6,23,0.04); transition: all .3s; }
+        .support-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(2,6,23,0.08); }
       `}</style>
 
       <main className="container mx-auto px-4 py-16 relative flex-1">
@@ -144,8 +146,37 @@ const Help = () => {
         </section>
 
         <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6 text-center">{t('help_page.quick_support')}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="tel:1800-SCHEMES" className="support-card text-center">
+              <Phone className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">{t('help_page.support_channels.call.title')}</h3>
+              <p className="text-sm text-muted-foreground">{t('help_page.support_channels.call.desc')}</p>
+            </a>
+
+            <a href="mailto:help@civicvoice.gov" className="support-card text-center">
+              <Mail className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">{t('help_page.support_channels.email.title')}</h3>
+              <p className="text-sm text-muted-foreground">{t('help_page.support_channels.email.desc')}</p>
+            </a>
+
+            <div className="support-card text-center">
+              <MessageCircle className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">{t('help_page.support_channels.chat.title')}</h3>
+              <p className="text-sm text-muted-foreground">{t('help_page.support_channels.chat.desc')}</p>
+            </div>
+
+            <div className="support-card text-center">
+              <Zap className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">{t('help_page.support_channels.status.title')}</h3>
+              <p className="text-sm text-muted-foreground">{t('help_page.support_channels.status.desc')}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-12">
           <div className="flex items-center justify-between mb-6 px-4">
-            <h2 className="text-2xl font-semibold text-center sm:text-left">Frequently Asked Questions</h2>
+            <h2 className="text-2xl font-semibold text-center sm:text-left">{t('help_page.faq_title')}</h2>
             <Button
               onClick={handleGenerateFAQs}
               disabled={generating}
