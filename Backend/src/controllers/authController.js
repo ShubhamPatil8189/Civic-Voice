@@ -31,16 +31,17 @@ exports.register = async (req, res) => {
       income 
     } = req.body;
 
-    // check user
+    // Check if user exists
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
+    }
 
-    // hash password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // create user with all fields
+    // Create user with all fields
     const user = await User.create({
       firstName,
       lastName: lastName || "",
@@ -61,9 +62,13 @@ exports.register = async (req, res) => {
       income: income || 0,
     });
 
+    // Generate token
+    const token = generateToken(user._id);
+
     res.status(201).json({
       success: true,
-      token: generateToken(user._id),
+      message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -94,17 +99,25 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Find user by email
     const user = await User.findOne({ email });
-    if (!user)
+    if (!user) {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
 
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    // Generate token
+    const token = generateToken(user._id);
 
     res.json({
       success: true,
-      token: generateToken(user._id),
+      message: "Login successful",
+      token,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -130,7 +143,7 @@ exports.login = async (req, res) => {
   }
 };
 
-/* ================= CURRENT USER ================= */
+/* ================= GET CURRENT USER ================= */
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -220,7 +233,47 @@ exports.updateProfile = async (req, res) => {
         createdAt: updatedUser.createdAt
       },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
+/* ================= CHANGE PASSWORD ================= */
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check if new password is provided
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "New password must be at least 6 characters long" 
+      });
+    }
+
+    // Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -228,5 +281,28 @@ exports.updateProfile = async (req, res) => {
 
 /* ================= LOGOUT ================= */
 exports.logout = (req, res) => {
-  res.json({ success: true, message: "Logged out successfully" });
+  // Since JWT is stateless, we just send success message
+  // Client will remove token from localStorage
+  res.json({ 
+    success: true, 
+    message: "Logged out successfully" 
+  });
+};
+
+/* ================= DELETE ACCOUNT ================= */
+exports.deleteAccount = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Account deleted successfully"
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

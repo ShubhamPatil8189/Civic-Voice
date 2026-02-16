@@ -73,15 +73,24 @@ function generateFallbackData(schemeName, lang) {
 }
 
 // Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
+const Step = require("../models/Step"); // Import Step model
+
+// ... (existing imports and setup)
+
+// Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
 router.get("/:schemeId", async (req, res) => {
   try {
     const { schemeId } = req.params;
     const lang = req.query.lang || "en";
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(schemeId);
 
+    let schemeData = null;
+    let stepsData = [];
+
     // 1️⃣ Database scheme
     if (isObjectId) {
       const scheme = await Scheme.findById(schemeId);
+<<<<<<< Updated upstream
       if (!scheme) return res.status(404).json({ message: "Scheme not found" });
 
       const getField = (field) => scheme[`${field}_${lang}`] || scheme[`${field}_en`] || scheme[field] || "";
@@ -129,34 +138,123 @@ router.get("/:schemeId", async (req, res) => {
     } catch (geminiErr) {
       console.error("Gemini failed, using fallback:", geminiErr.message);
       llmData = generateFallbackData(schemeId, lang);
+=======
+      if (scheme) {
+        const getField = (field) => scheme[`${field}_${lang}`] || scheme[`${field}_en`] || scheme[field] || "";
+        const eligibilityCriteria = getField("eligibility").split("\n").filter(Boolean);
+        const benefits = getField("benefits").split("\n").filter(Boolean);
+
+        schemeData = {
+          _id: scheme._id,
+          name: getField("name"),
+          description: getField("description"),
+          category: getField("category"),
+          eligibilityCriteria,
+          benefits,
+          requiredDocuments: scheme.documentsRequired || []
+        };
+
+        // Fetch steps from DB
+        const stepRecord = await Step.findOne({ schemeId: schemeId });
+        if (stepRecord && stepRecord.steps && stepRecord.steps.length > 0) {
+          stepsData = stepRecord.steps;
+        }
+      }
     }
 
-    // Ensure all fields exist
+    // 2️⃣ If scheme found in DB, return it with steps (if any)
+    if (schemeData) {
+      // If no steps in DB, we could optionally generate them too, but for now let's stick to DB steps if scheme is in DB
+      // OR: If you want to force generation for DB schemes without steps, add logic here.
+      // For this implementation, let's try to generate if missing even for DB schemes.
+      if (stepsData.length === 0) {
+        console.log("No steps in DB, generating...");
+        // Fall through to Gemini generation for steps only
+      } else {
+        return res.json({ ...schemeData, steps: stepsData });
+      }
+    }
+
+    // 3️⃣ LLM generation (for non-DB schemes OR missing steps)
+    // If we have schemeData but no steps, we just need steps.
+    // If we have no schemeData, we need everything.
+
+    let llmData = schemeData || {};
+
+    try {
+      // Language instruction
+      let languageInstruction = "";
+      if (lang === "hi") {
+        languageInstruction = "Respond in Hindi.";
+      } else if (lang === "mr") {
+        languageInstruction = "Respond in Marathi.";
+      } else {
+        languageInstruction = "Respond in English.";
+      }
+
+      const schemeNameForPrompt = schemeData ? schemeData.name : schemeId;
+
+      const promptScheme = `
+You are a civic assistant. Generate detailed information about the Indian government scheme named "${schemeNameForPrompt}".
+${languageInstruction}
+Include the following fields in JSON format:
+{
+  "name": "string",
+  "description": "string",
+  "category": "string",
+  "eligibilityCriteria": ["string", ...],
+  "benefits": ["string", ...],
+  "requiredDocuments": ["string", ...],
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "string (Short title)",
+      "action": "string (Detailed action)",
+      "location": "string (e.g. Online, Bank)",
+      "why": "string (Reason for this step)",
+      "estimatedTime": "string"
+    }
+  ]
+}
+Make content realistic. Return ONLY JSON.
+`;
+      // Only generate if we don't have scheme data OR don't have steps
+      if (!schemeData || stepsData.length === 0) {
+        const result = await model.generateContent(promptScheme);
+        const response = await result.response;
+        const text = response.text();
+        const cleanJson = extractJSON(text);
+        const generated = JSON.parse(cleanJson);
+
+        if (!schemeData) {
+          llmData = generated;
+        } else {
+          // We had scheme data but needed steps
+          llmData.steps = generated.steps || [];
+        }
+      }
+
+    } catch (e) {
+      console.error("Gemini error:", e.message);
+      // Fallback if needed
+      if (!llmData.name) {
+        llmData = generateFallbackData(schemeId, lang);
+      }
+>>>>>>> Stashed changes
+    }
+
+    // Ensure ID is set
     llmData._id = schemeId;
-    llmData.name = llmData.name || schemeId;
-    llmData.description = llmData.description || "Government scheme for citizen welfare.";
-    llmData.category = llmData.category || "General";
-    llmData.eligibilityCriteria = llmData.eligibilityCriteria?.length ? llmData.eligibilityCriteria : ["Check official website"];
-    llmData.benefits = llmData.benefits?.length ? llmData.benefits : ["Financial assistance"];
-    llmData.requiredDocuments = llmData.requiredDocuments?.length ? llmData.requiredDocuments : ["Identity proof", "Address proof"];
 
     return res.json(llmData);
 
   } catch (err) {
-    console.error("Unhandled error in eligibility route:", err);
-    // Ultimate fallback – always return something
-    return res.json({
-      _id: req.params.schemeId,
-      name: req.params.schemeId,
-      description: "Service temporarily unavailable. Please try again later.",
-      category: "General",
-      eligibilityCriteria: ["Please check official sources"],
-      benefits: ["Please check official sources"],
-      requiredDocuments: ["Please check official sources"]
-    });
+    console.error("Route error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
+<<<<<<< Updated upstream
 // 3️⃣ Check Eligibility logic (Rule + LLM)
 router.post("/check", async (req, res) => {
   try {
@@ -199,5 +297,8 @@ router.post("/check", async (req, res) => {
     });
   }
 });
+=======
+module.exports = router;
+>>>>>>> Stashed changes
 
 module.exports = router;
