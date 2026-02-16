@@ -3,6 +3,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+// Helper to extract JSON from markdown code blocks
 function extractJSON(text) {
   let cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
   const firstBrace = cleaned.indexOf("{");
@@ -12,6 +13,43 @@ function extractJSON(text) {
   }
   return cleaned;
 }
+
+exports.analyzeQuery = async (text) => {
+  const prompt = `
+    Analyze the user's query for a government scheme assistant.
+    Query: "${text}"
+
+    Determine:
+    1. intent: "scheme_search" (looking for benefits/schemes) OR "general_doubt" (asking general question like "what is FIR?", "capital of India")
+    2. keywords: Extract 3-5 key search terms for MongoDB text search (English only). 
+       - Convert to English if needed.
+       - Include synonyms (e.g., "farming" -> "agriculture", "farmer", "kisan").
+    3. language: Detect input language code (en, hi, mr).
+
+    Output JSON ONLY:
+    {
+      "intent": "scheme_search" | "general_doubt",
+      "keywords": ["string"],
+      "language": "string"
+    }
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const output = response.text();
+    const safeJSON = extractJSON(output);
+    return JSON.parse(safeJSON);
+  } catch (error) {
+    console.error("Query analysis failed:", error);
+    // Fallback: Assume scheme search with raw text
+    return {
+      intent: "scheme_search",
+      keywords: text.split(" "),
+      language: "en"
+    };
+  }
+};
 
 exports.analyzeIntent = async (text, history = [], contextSchemes = []) => {
   const historyText = history

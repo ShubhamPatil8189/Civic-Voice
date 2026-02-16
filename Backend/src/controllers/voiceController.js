@@ -27,15 +27,33 @@ exports.processVoice = async (req, res) => {
       }));
     }
 
-    // 1. Context Retrieval (Database Search)
-    const regex = new RegExp(text, "i");
-    const directMatches = await Scheme.find({
-      $or: [
-        { name_en: regex }, { description_en: regex },
-        { name_hi: regex }, { description_hi: regex },
-        { name_mr: regex }, { description_mr: regex }
-      ]
-    }).limit(5).select("name_en description_en id");
+    // 1. Smart Query Analysis (LLM First)
+    const { analyzeQuery } = require("../services/geminiService");
+    const analysis = await analyzeQuery(text);
+    console.log("🧠 Query Analysis:", analysis);
+
+    let directMatches = [];
+
+    // 2. Conditional Database Search
+    if (analysis.intent === "scheme_search" && analysis.keywords.length > 0) {
+      // Construct robust $or query with extracted keywords
+      const searchConditions = analysis.keywords.flatMap(kw => {
+        const regex = new RegExp(kw, "i");
+        return [
+          { name_en: regex }, { description_en: regex },
+          { name_hi: regex }, { description_hi: regex },
+          { name_mr: regex }, { description_mr: regex }
+        ];
+      });
+
+      directMatches = await Scheme.find({ $or: searchConditions })
+        .limit(5)
+        .select("name_en description_en id");
+
+      console.log(`🔎 Found ${directMatches.length} schemes matching keywords: ${analysis.keywords.join(", ")}`);
+    } else {
+      console.log("⏩ Skipping DB search for general doubt/chat.");
+    }
 
     // 2. User Context
     let userProfile = null;
