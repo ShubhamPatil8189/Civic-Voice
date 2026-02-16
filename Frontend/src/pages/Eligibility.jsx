@@ -340,6 +340,7 @@ const EligibilityPage = () => {
                   </div>
                 </div>
               </div>
+<<<<<<< Updated upstream
 
               {/* Application Steps */}
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
@@ -399,6 +400,8 @@ const EligibilityPage = () => {
                   {t('eligibility_page.cta.download_btn')}
                 </button>
               </div>
+=======
+>>>>>>> Stashed changes
             </div>
           </div>
         </div>

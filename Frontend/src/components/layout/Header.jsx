@@ -1,13 +1,54 @@
 import { Link, useLocation } from "react-router-dom";
-import { Building2, LogIn, UserPlus, Home, FileText, HelpCircle } from "lucide-react";
+import { Building2, LogIn, UserPlus, Home, FileText, HelpCircle, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { authAPI } from "@/services/api";
 
 const Header = ({ variant = "landing" }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Check login status on mount and when location changes
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      if (token && userData) {
+        setIsLoggedIn(true);
+        setUser(JSON.parse(userData));
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    };
+
+    checkLoginStatus();
+
+    // Add event listener for storage changes (logout from other tabs)
+    window.addEventListener('storage', checkLoginStatus);
+    
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+    };
+  }, [location]); // Re-check when location changes
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+      setUser(null);
+      window.location.href = '/'; // Redirect to home
+    } catch (err) {
+      console.log("Logout error");
+    }
+  };
 
   const landingLinks = [
     { href: "/schemes", label: t('header.schemes'), icon: FileText },
@@ -17,7 +58,7 @@ const Header = ({ variant = "landing" }) => {
 
   const appLinks = [
     { href: "/schemes", label: t('header.schemes'), icon: FileText },
-    { href: "/profile", label: t('header.my_profile'), icon: UserPlus },
+    { href: "/profile", label: t('header.my_profile'), icon: User },
     { href: "/help", label: t('header.help'), icon: HelpCircle },
   ];
 
@@ -46,14 +87,16 @@ const Header = ({ variant = "landing" }) => {
           <nav className="hidden md:flex items-center gap-6">
             <Link
               to="/"
-              className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${location.pathname === "/" ? "bg-gray-50" : ""
-                }`}
+              className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${
+                location.pathname === "/" ? "bg-gray-50" : ""
+              }`}
             >
               <Home className="h-4 w-4 text-gray-500" />
-              <span className={`text-sm font-medium ${location.pathname === "/"
+              <span className={`text-sm font-medium ${
+                location.pathname === "/"
                   ? "text-purple-600 font-semibold"
                   : "text-gray-700"
-                }`}>
+              }`}>
                 {t('header.home')}
               </span>
             </Link>
@@ -64,64 +107,111 @@ const Header = ({ variant = "landing" }) => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${location.pathname === link.href ? "bg-gray-50" : ""
-                    }`}
+                  className={`px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors ${
+                    location.pathname === link.href ? "bg-gray-50" : ""
+                  }`}
                 >
                   <Icon className="h-4 w-4 text-gray-500" />
-                  <span className={`text-sm font-medium ${location.pathname === link.href
+                  <span className={`text-sm font-medium ${
+                    location.pathname === link.href
                       ? "text-purple-600 font-semibold"
                       : "text-gray-700"
-                    }`}>
+                  }`}>
                     {link.label}
                   </span>
                 </Link>
               );
             })}
 
-            {/* LOGIN BUTTON */}
-            <Link to="/login">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all"
-              >
-                <LogIn className="h-4 w-4" />
-                {t('header.login')}
-              </Button>
-            </Link>
+            {/* Show different buttons based on login status */}
+            {isLoggedIn ? (
+              <>
+                {/* User greeting */}
+                {user && (
+                  <span className="text-sm text-gray-600 mr-2">
+                    Hi, {user.firstName}
+                  </span>
+                )}
+                
+                {/* Logout Button - FIXED: Removed translation function */}
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Login Button */}
+                <Link to="/login">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {t('header.login')}
+                  </Button>
+                </Link>
 
-            {/* REGISTER BUTTON */}
-            <Link to="/register">
-              <Button
-                size="sm"
-                className="gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg"
-              >
-                <UserPlus className="h-4 w-4" />
-                {t('header.signup')}
-              </Button>
-            </Link>
+                {/* Register Button */}
+                <Link to="/register">
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {t('header.signup')}
+                  </Button>
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Mobile buttons */}
           <div className="flex md:hidden items-center gap-2">
-            <Link to="/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-              >
-                {t('header.login')}
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                {user && (
+                  <span className="text-sm text-gray-600 mr-1">
+                    {user.firstName}
+                  </span>
+                )}
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                  >
+                    {t('header.login')}
+                  </Button>
+                </Link>
 
-            <Link to="/register">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700"
-              >
-                {t('header.signup')}
-              </Button>
-            </Link>
+                <Link to="/register">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-700 hover:to-cyan-700"
+                  >
+                    {t('header.signup')}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -156,6 +246,20 @@ const Header = ({ variant = "landing" }) => {
                   </Link>
                 );
               })}
+              
+              {/* Mobile menu logout option when logged in */}
+              {isLoggedIn && (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="px-3 py-2 rounded-lg hover:bg-red-50 flex items-center gap-2 text-red-600 w-full text-left"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              )}
             </nav>
           </div>
         </div>
