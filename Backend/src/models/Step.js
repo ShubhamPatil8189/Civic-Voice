@@ -1,22 +1,14 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const stepSchema = new mongoose.Schema({
-  schemeId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  steps: [
-    {
-      stepNumber: Number,
-      title: String,
-      action: String,
-      location: String,
-      why: String,
-      estimatedTime: String,
-      difficulty: String
-    }
-  ]
+const StepSchema = new mongoose.Schema({
+  schemeId: { type: mongoose.Schema.Types.ObjectId, ref: "Scheme", required: true },
+  stepNumber: { type: Number, required: true },
+  title: { type: String, required: true },
+  action: { type: String, required: true },
+  location: { type: String },
+  why: { type: String },
+  estimatedTime: { type: String }
 });
 
-module.exports = mongoose.model("Step", stepSchema);
+const Step = mongoose.model("Step", StepSchema);
+export default Step;
