@@ -14,7 +14,7 @@ import StepGuide from "./pages/StepGuide";
 import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/layout/BottomNav";
-import Login from "./pages/Login"; 
+import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Updateprofile from "./pages/UpdateProfile";
 import Register from "./pages/Register";
@@ -46,7 +46,12 @@ const App = () => (
       <Sonner />
 
       <LanguageProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <div className="pb-16 md:pb-0">
             <Routes>
               {/* Landing page */}
@@ -68,9 +73,9 @@ const App = () => (
               {/* ✅ Story Mode route */}
               <Route path="/story/:schemeId" element={<StoryModeWrapper />} />
               <Route path="/login" element={<Login />} />
-<Route path="/register" element={<Register />} />
-<Route path="/profile" element={<Profile />} />
-<Route path="/update-profile" element={<Updateprofile />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/update-profile" element={<Updateprofile />} />
 
               {/* Catch-all 404 */}
               <Route path="*" element={<NotFound />} />
@@ -86,4 +91,3 @@ const App = () => (
 );
 
 export default App;
-  
