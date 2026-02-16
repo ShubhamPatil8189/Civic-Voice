@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { User, Mail, Lock, Calendar, Phone, MapPin, Briefcase } from "lucide-react";
+import { User, Mail, Lock, Calendar, Phone, MapPin, Briefcase, DollarSign, Home, CheckSquare } from "lucide-react";
 import { authAPI } from "@/services/api";
 import { useTranslation } from "react-i18next";
 
@@ -16,7 +16,15 @@ const Register = () => {
     password: "",
     phone: "",
     location: "",
-    occupation: ""
+    occupation: "",
+    // Eligibility fields
+    bplCardHolder: false,
+    carOwner: false,
+    disability: false,
+    student: false,
+    veteran: false,
+    householdType: "Urban",
+    income: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -27,7 +35,11 @@ const Register = () => {
 
   // Handle input change
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setForm({ 
+      ...form, 
+      [name]: type === "checkbox" ? checked : value 
+    });
   };
 
   // Submit form to backend
@@ -63,7 +75,14 @@ const Register = () => {
           password: "",
           phone: "",
           location: "",
-          occupation: ""
+          occupation: "",
+          bplCardHolder: false,
+          carOwner: false,
+          disability: false,
+          student: false,
+          veteran: false,
+          householdType: "Urban",
+          income: ""
         });
 
         // Redirect to login after 2 seconds
@@ -87,7 +106,7 @@ const Register = () => {
       <Header />
 
       <div className="flex-1 flex items-center justify-center px-4 py-14">
-        <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8">
+        <div className="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-8">
           {/* Title */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800">{t('register_page.title')}</h2>
@@ -111,139 +130,243 @@ const Register = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* First Name */}
-            <div>
-              <label className="label">{t('register_page.labels.first_name')}</label>
-              <div className="inputBox">
-                <User className="icon" />
-                <input
-                  name="firstName"
-                  type="text"
-                  placeholder={t('register_page.placeholders.first_name')}
-                  value={form.firstName}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* First Name */}
+              <div>
+                <label className="label">{t('register_page.labels.first_name')}</label>
+                <div className="inputBox">
+                  <User className="icon" />
+                  <input
+                    name="firstName"
+                    type="text"
+                    placeholder={t('register_page.placeholders.first_name')}
+                    value={form.firstName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label className="label">{t('register_page.labels.last_name')}</label>
+                <div className="inputBox">
+                  <User className="icon" />
+                  <input
+                    name="lastName"
+                    type="text"
+                    placeholder={t('register_page.placeholders.last_name')}
+                    value={form.lastName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Age */}
+              <div>
+                <label className="label">{t('register_page.labels.age')}</label>
+                <div className="inputBox">
+                  <Calendar className="icon" />
+                  <input
+                    name="age"
+                    type="number"
+                    placeholder={t('register_page.placeholders.age')}
+                    value={form.age}
+                    onChange={handleChange}
+                    required
+                    min="5"
+                    max="120"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="label">{t('register_page.labels.phone')}</label>
+                <div className="inputBox">
+                  <Phone className="icon" />
+                  <input
+                    name="phone"
+                    type="tel"
+                    placeholder={t('register_page.placeholders.phone')}
+                    value={form.phone}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="label">{t('register_page.labels.location')}</label>
+                <div className="inputBox">
+                  <MapPin className="icon" />
+                  <input
+                    name="location"
+                    type="text"
+                    placeholder={t('register_page.placeholders.location')}
+                    value={form.location}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Occupation */}
+              <div>
+                <label className="label">{t('register_page.labels.occupation')}</label>
+                <div className="inputBox">
+                  <Briefcase className="icon" />
+                  <input
+                    name="occupation"
+                    type="text"
+                    placeholder={t('register_page.placeholders.occupation')}
+                    value={form.occupation}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="md:col-span-2">
+                <label className="label">{t('register_page.labels.email')}</label>
+                <div className="inputBox">
+                  <Mail className="icon" />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder={t('register_page.placeholders.email')}
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="md:col-span-2">
+                <label className="label">{t('register_page.labels.password')}</label>
+                <div className="inputBox">
+                  <Lock className="icon" />
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder={t('register_page.placeholders.password')}
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    minLength="6"
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Last Name */}
-            <div>
-              <label className="label">{t('register_page.labels.last_name')}</label>
-              <div className="inputBox">
-                <User className="icon" />
-                <input
-                  name="lastName"
-                  type="text"
-                  placeholder={t('register_page.placeholders.last_name')}
-                  value={form.lastName}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
+            {/* Eligibility Fields Section */}
+            <div className="border-t pt-6 mt-4">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Eligibility Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Checkboxes */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      name="bplCardHolder" 
+                      checked={form.bplCardHolder} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-purple-600"
+                    />
+                    <span className="text-gray-700">BPL Card Holder</span>
+                  </label>
 
-            {/* Age */}
-            <div>
-              <label className="label">{t('register_page.labels.age')}</label>
-              <div className="inputBox">
-                <Calendar className="icon" />
-                <input
-                  name="age"
-                  type="number"
-                  placeholder={t('register_page.placeholders.age')}
-                  value={form.age}
-                  onChange={handleChange}
-                  required
-                  min="5"
-                  max="120"
-                  disabled={loading}
-                />
-              </div>
-            </div>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      name="carOwner" 
+                      checked={form.carOwner} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-purple-600"
+                    />
+                    <span className="text-gray-700">Car Owner</span>
+                  </label>
 
-            {/* Phone (New Field) */}
-            <div>
-              <label className="label">{t('register_page.labels.phone')}</label>
-              <div className="inputBox">
-                <Phone className="icon" />
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder={t('register_page.placeholders.phone')}
-                  value={form.phone}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-              </div>
-            </div>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      name="disability" 
+                      checked={form.disability} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-purple-600"
+                    />
+                    <span className="text-gray-700">Disability</span>
+                  </label>
+                </div>
 
-            {/* Location (New Field) */}
-            <div>
-              <label className="label">{t('register_page.labels.location')}</label>
-              <div className="inputBox">
-                <MapPin className="icon" />
-                <input
-                  name="location"
-                  type="text"
-                  placeholder={t('register_page.placeholders.location')}
-                  value={form.location}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-              </div>
-            </div>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      name="student" 
+                      checked={form.student} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-purple-600"
+                    />
+                    <span className="text-gray-700">Student</span>
+                  </label>
 
-            {/* Occupation (New Field) */}
-            <div>
-              <label className="label">{t('register_page.labels.occupation')}</label>
-              <div className="inputBox">
-                <Briefcase className="icon" />
-                <input
-                  name="occupation"
-                  type="text"
-                  placeholder={t('register_page.placeholders.occupation')}
-                  value={form.occupation}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      name="veteran" 
+                      checked={form.veteran} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-purple-600"
+                    />
+                    <span className="text-gray-700">Veteran</span>
+                  </label>
+                </div>
               </div>
-            </div>
 
-            {/* Email */}
-            <div>
-              <label className="label">{t('register_page.labels.email')}</label>
-              <div className="inputBox">
-                <Mail className="icon" />
-                <input
-                  name="email"
-                  type="email"
-                  placeholder={t('register_page.placeholders.email')}
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
+              {/* Household Type and Income */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="label">Household Type</label>
+                  <div className="inputBox">
+                    <Home className="icon" />
+                    <select 
+                      name="householdType" 
+                      value={form.householdType} 
+                      onChange={handleChange}
+                      className="w-full bg-transparent outline-none"
+                    >
+                      <option value="Urban">Urban</option>
+                      <option value="Rural">Rural</option>
+                    </select>
+                  </div>
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="label">{t('register_page.labels.password')}</label>
-              <div className="inputBox">
-                <Lock className="icon" />
-                <input
-                  name="password"
-                  type="password"
-                  placeholder={t('register_page.placeholders.password')}
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                  minLength="6"
-                  disabled={loading}
-                />
+                <div>
+                  <label className="label">Annual Income (₹)</label>
+                  <div className="inputBox">
+                    <DollarSign className="icon" />
+                    <input
+                      name="income"
+                      type="number"
+                      placeholder="Enter annual income"
+                      value={form.income}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full bg-transparent outline-none"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -278,10 +401,11 @@ const Register = () => {
           font-size: 14px;
           font-weight: 600;
           color: #374151;
+          display: block;
+          margin-bottom: 4px;
         }
 
         .inputBox {
-          margin-top: 6px;
           display: flex;
           align-items: center;
           border: 1px solid #e5e7eb;
@@ -296,7 +420,7 @@ const Register = () => {
           box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
         }
 
-        .inputBox input {
+        .inputBox input, .inputBox select {
           border: none;
           outline: none;
           flex: 1;
@@ -318,8 +442,8 @@ const Register = () => {
 
         .registerBtn {
           width: 100%;
-          margin-top: 10px;
-          padding: 12px;
+          margin-top: 20px;
+          padding: 14px;
           border-radius: 10px;
           font-weight: 600;
           color: white;
@@ -327,6 +451,7 @@ const Register = () => {
           transition: 0.25s;
           border: none;
           cursor: pointer;
+          font-size: 16px;
         }
 
         .registerBtn:hover:not(:disabled) {
