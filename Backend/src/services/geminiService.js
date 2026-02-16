@@ -13,7 +13,7 @@ function extractJSON(text) {
   return cleaned;
 }
 
-exports.analyzeIntent = async (text, history = []) => {
+exports.analyzeIntent = async (text, history = [], contextSchemes = []) => {
   const historyText = history
     .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
     .join("\n");
@@ -27,13 +27,15 @@ ${historyText || "None"}
 
 Current user message: "${text}"
 
+Context (Potential Schemes Found):
+${JSON.stringify(history.contextSchemes || [])}
+
 Based on the entire conversation, determine:
-- The user's core intent (e.g., "pension enquiry", "education loan", "housing scheme", "health insurance").
-- What information is missing to check eligibility (list fields like age, income, state, gender, etc.).
-- A confidence score (0 to 1) for your intent inference.
-- If you can already suggest specific schemes, list them with a short reason.
-- If you need more information, provide a follow‑up question to ask the user next.
-- Finally, give a helpful explanation that guides the user.
+- The user's core intent (e.g., "pension enquiry", "education loan", "check eligibility", "how to apply").
+- If the user is asking for a specific procedure (e.g., "how do I apply?"), treat it as a "navigation" intent.
+- Evaluate eligibility based on user details provided in conversation or profile.
+- If you need more information, provide a ONE-SENTENCE follow-up question.
+- Provide a helpful, natural language explanation (max 2-3 sentences) that directly answers the user.
 
 Return ONLY a JSON object with these fields:
 {
@@ -42,7 +44,8 @@ Return ONLY a JSON object with these fields:
   "confidence": number,
   "suggested_schemes": [{"name": "string", "reason": "string"}],
   "follow_up_question": "string",
-  "explanation": "string"
+  "explanation": "string",
+  "navigation_step": "string or null" // e.g., "Step 1: Gather Documents" if explaining a process
 }
 `;
 
@@ -61,7 +64,8 @@ Return ONLY a JSON object with these fields:
       confidence: 0,
       suggested_schemes: [],
       follow_up_question: "I didn't understand. Could you please rephrase?",
-      explanation: "I'm having trouble understanding. Please try again."
+      explanation: "I'm having trouble understanding. Please try again.",
+      navigation_step: null
     };
   }
 };

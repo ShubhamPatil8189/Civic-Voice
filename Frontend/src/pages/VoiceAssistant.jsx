@@ -41,6 +41,8 @@ const VoiceAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [animateCards, setAnimateCards] = useState(false);
   const [geminiResponse, setGeminiResponse] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentStep, setCurrentStep] = useState(null);
 
   // Conversation history
   const [messages, setMessages] = useState([]);
@@ -97,7 +99,42 @@ const VoiceAssistant = () => {
     };
 
     recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      window.speechSynthesis.cancel();
+    };
   }, [language]);
+
+  // TTS Function
+  const speakText = (text) => {
+    if (!window.speechSynthesis) return;
+
+    // Cancel current speech
+    window.speechSynthesis.cancel();
+    setIsSpeaking(true);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Select Voice based on language
+    const voices = window.speechSynthesis.getVoices();
+    let voice = voices.find(v => v.lang === languageConfig[language].code);
+    if (!voice && language === 'mr') {
+      // Fallback for Marathi to Hindi or any Indian voice
+      voice = voices.find(v => v.lang.includes('hi') || v.lang.includes('IN'));
+    }
+    if (voice) utterance.voice = voice;
+
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -146,6 +183,16 @@ const VoiceAssistant = () => {
           intentData: data.intentData,
           eligibility: data.eligibility
         }]);
+
+        // Trigger TTS for the explanation
+        speakText(data.explanation);
+
+        if (data.intentData.navigation_step) {
+          setCurrentStep(data.intentData.navigation_step);
+        } else {
+          setCurrentStep(null);
+        }
+
       } else {
         // Database match – add brief message
         setMessages(prev => [...prev, {
@@ -153,6 +200,8 @@ const VoiceAssistant = () => {
           content: t('schemes.found', { count: data.matchedSchemes.length })
         }]);
       }
+
+
     } catch (err) {
       console.error("Fetch error:", err);
       setAssistantText(t('voice.server_error'));
@@ -232,8 +281,18 @@ const VoiceAssistant = () => {
                 )}
               </button>
               <p className="mt-2 text-sm font-medium text-gray-700">
-                {isListening ? t('voice.listening') : t('voice.click_to_speak')}
+                {isListening ? t('voice.listening') : isSpeaking ? "Speaking..." : t('voice.click_to_speak')}
               </p>
+              {isSpeaking && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 border-red-200 text-red-600 hover:bg-red-50"
+                  onClick={(e) => { e.stopPropagation(); stopSpeaking(); }}
+                >
+                  Stop Speaking
+                </Button>
+              )}
             </div>
 
             <div className="relative">
@@ -282,6 +341,16 @@ const VoiceAssistant = () => {
               </Button>
             ))}
           </div>
+
+          {/* Navigation Step Card (If active) */}
+          {currentStep && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-r-xl shadow-sm animate-fadeIn">
+              <h3 className="text-blue-800 font-bold flex items-center gap-2">
+                <ListChecks className="h-5 w-5" /> Current Step
+              </h3>
+              <p className="text-gray-800 mt-1 font-medium text-lg">{currentStep}</p>
+            </div>
+          )}
 
           {/* Chat History */}
           {messages.length > 0 && (
