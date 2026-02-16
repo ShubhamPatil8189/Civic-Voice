@@ -1,33 +1,76 @@
-exports.checkEligibility = (intent, userData = {}) => {
-  const intentLower = intent.toLowerCase();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-  if (intentLower.includes("pension") || intentLower.includes("old age")) {
-    if (userData.age >= 60 && (userData.income || 0) < 200000) {
-      return { eligible: true, scheme: "Senior Citizen Pension", details: "You meet the age and income criteria. Apply at your local pension office." };
-    } else {
-      return { eligible: false, reason: userData.age < 60 ? "Minimum age is 60." : "Income exceeds limit.", details: "You may still qualify for other schemes." };
-    }
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+// 1. Rule Matcher (Fast & Cheap)
+const checkRules = (scheme, user) => {
+  // If scheme has structured criteria (future proofing), check them here.
+  // For now, we only have description text, so we rely more on LLM.
+  // However, we can check basic hardcoded logic if the scheme name matches known patterns.
+
+  const name = (scheme.name_en || "").toLowerCase();
+
+  if (name.includes("pension") || name.includes("old age")) {
+    if (user.age && user.age < 60) return { eligible: false, reason: "Minimum age for pension is usually 60." };
   }
 
-  if (intentLower.includes("education") || intentLower.includes("student") || intentLower.includes("scholarship")) {
-    if (userData.age >= 18 && userData.age <= 35) {
-      return { eligible: true, scheme: "Education Loan Subsidy", details: "You are eligible. Contact your bank or the education department." };
-    } else {
-      return { eligible: false, reason: "Age must be between 18 and 35.", details: "Consider other skill development schemes." };
-    }
+  if (name.includes("student") || name.includes("scholarship")) {
+    if (user.age && user.age > 35) return { eligible: false, reason: "Scholarships are typically for students under 35." };
   }
 
-  if (intentLower.includes("health") || intentLower.includes("medical") || intentLower.includes("insurance")) {
-    if ((userData.income || 0) < 300000) {
-      return { eligible: true, scheme: "Ayushman Bharat", details: "You likely qualify for free health coverage. Visit a nearby empanelled hospital." };
-    } else {
-      return { eligible: false, reason: "Income above threshold.", details: "You may still get tax benefits under Section 80D." };
-    }
+  return null; // No decisive rule result
+};
+
+// 2. LLM Reasoner (Comprehensive)
+const checkLLM = async (scheme, user) => {
+  const prompt = `
+    Task: Determine eligibility for a government scheme.
+    
+    Scheme: "${scheme.name_en}"
+    Description: "${scheme.description_en}"
+    Criteria Payload: "${scheme.eligibility_en || ''}"
+
+    User Profile:
+    - Age: ${user.age || "Unknown"}
+    - Income: ${user.income || "Unknown"}
+    - Gender: ${user.gender || "Unknown"}
+    - State: ${user.state || "Unknown"}
+    - Occupation: ${user.occupation || "Unknown"}
+
+    Based STRICTLY on the description, is the user eligible?
+    - If eligible, say "Eligible".
+    - If not, say "Not Eligible" and give the specific reason (e.g. "Income too high").
+    - If data is missing (e.g. scheme needs Age but user didn't provide it), say "Potentially Eligible" and list what is missing.
+
+    Return JSON: { "status": "Eligible" | "Not Eligible" | "Potentially Eligible", "reason": "string" }
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("Eligibility Engine LLM Error:", e);
+    return { status: "Unknown", reason: "Could not verify details." };
+  }
+};
+
+exports.checkEligibility = async (intent, user = {}, specificScheme = null) => {
+  // If a specific scheme is selected (e.g. from DB match), check that.
+  if (specificScheme) {
+    // 1. Try Rules
+    const ruleResult = checkRules(specificScheme, user);
+    if (ruleResult) return ruleResult;
+
+    // 2. Try LLM
+    return await checkLLM(specificScheme, user);
   }
 
-  if (intentLower.includes("house") || intentLower.includes("home") || intentLower.includes("awas")) {
-    return { eligible: "maybe", scheme: "PM Awas Yojana", details: "Eligibility depends on income, land ownership, and whether you live in a kutcha house. Please provide more details." };
-  }
-
-  return { eligible: "unknown", reason: "Intent not clear or scheme not found.", details: "Can you tell me more about what you're looking for?" };
+  // Fallback for generic intent (Legacy behavior or generic advice)
+  return {
+    status: "General Advice",
+    reason: "Please select a specific scheme to check eligibility."
+  };
 };

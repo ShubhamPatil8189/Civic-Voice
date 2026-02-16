@@ -13,7 +13,8 @@ import {
   BookOpen,
   Target,
   BadgeCheck,
-  AlertCircle
+  AlertCircle,
+  XCircle // Added
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -28,6 +29,39 @@ const EligibilityPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("eligibility");
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState(null);
+
+  const handleCheckEligibility = async () => {
+    setChecking(true);
+    try {
+      // Mock User Profile for now (later fetch from Auth Context)
+      const mockUserProfile = {
+        age: 28,
+        income: 150000,
+        gender: "Female",
+        state: "Maharashtra",
+        occupation: "Farmer"
+      };
+
+      const res = await fetch(`${BACKEND_URL}/api/eligibility/check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          schemeData: { ...data, eligibilityCriteria: eligibilityCriteria }, // Pass normalized data
+          userProfile: mockUserProfile
+        })
+      });
+
+      const result = await res.json();
+      setCheckResult(result);
+    } catch (err) {
+      console.error("Check failed", err);
+      alert("Something went wrong while checking eligibility.");
+    } finally {
+      setChecking(false);
+    }
+  };
 
 
 
@@ -151,8 +185,8 @@ const EligibilityPage = () => {
             <button
               onClick={() => setActiveTab("eligibility")}
               className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all relative ${activeTab === "eligibility"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:text-blue-500"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-600 hover:text-blue-500"
                 }`}
             >
               <UserCheck className="h-5 w-5" />
@@ -161,8 +195,8 @@ const EligibilityPage = () => {
             <button
               onClick={() => setActiveTab("documents")}
               className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all relative ${activeTab === "documents"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:text-blue-500"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-600 hover:text-blue-500"
                 }`}
             >
               <FileText className="h-5 w-5" />
@@ -171,8 +205,8 @@ const EligibilityPage = () => {
             <button
               onClick={() => setActiveTab("benefits")}
               className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all relative ${activeTab === "benefits"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:text-blue-500"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-600 hover:text-blue-500"
                 }`}
             >
               <Target className="h-5 w-5" />
@@ -380,8 +414,12 @@ const EligibilityPage = () => {
                 {t('eligibility_page.cta.desc')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:shadow-lg transition-all">
-                  {t('eligibility_page.cta.check_btn')}
+                <button
+                  onClick={handleCheckEligibility}
+                  disabled={checking}
+                  className="px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {checking ? "Checking..." : t('eligibility_page.cta.check_btn')}
                 </button>
                 <button className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white/10 transition-all">
                   {t('eligibility_page.cta.download_btn')}
@@ -391,6 +429,37 @@ const EligibilityPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Result Modal/Alert */}
+      {checkResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setCheckResult(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <XCircle className="h-6 w-6" />
+            </button>
+
+            <div className={`p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4 mx-auto ${checkResult.status === "Eligible" ? "bg-green-100 text-green-600" :
+              checkResult.status === "Not Eligible" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-600"
+              }`}>
+              {checkResult.status === "Eligible" ? <CheckCircle className="h-8 w-8" /> :
+                checkResult.status === "Not Eligible" ? <XCircle className="h-8 w-8" /> : <AlertCircle className="h-8 w-8" />}
+            </div>
+
+            <h3 className="text-2xl font-bold text-center mb-2">{checkResult.status}</h3>
+            <p className="text-center text-gray-600 mb-6">{checkResult.reason}</p>
+
+            <button
+              onClick={() => setCheckResult(null)}
+              className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+            >
+              Okay, understood
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

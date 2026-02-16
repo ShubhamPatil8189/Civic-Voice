@@ -4,22 +4,19 @@ const Scheme = require("../models/Scheme");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Use a stable model – change to "gemini-1.5-pro" if you have access
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+  generationConfig: { responseMimeType: "application/json" }
+});
 
-// Helper to extract JSON from Gemini response (handles markdown and extra text)
+// Helper to clean formatting if JSON mode still includes backticks (unlikely but safe)
 function extractJSON(text) {
-  let cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
-  const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
-  }
-  return cleaned;
+  return text.replace(/```json/g, "").replace(/```/g, "").trim();
 }
 
 // Generate fallback data based on scheme name keywords (used if Gemini fails)
 function generateFallbackData(schemeName, lang) {
+  // ... existing fallback code ...
   const name = schemeName.toLowerCase();
   let category = "General";
   let description = "Government scheme for citizen welfare.";
@@ -45,7 +42,7 @@ function generateFallbackData(schemeName, lang) {
     eligibility = ["Family income below ₹2.5 lakh", "Minimum 60% marks", "Enrolled in recognized institution"];
     benefits = ["Tuition fee reimbursement up to ₹10,000", "Monthly stipend"];
     documents = ["Income certificate", "Marksheets", "College ID"];
-  } else if (name.includes("farmer") || name.includes("agriculture")) {
+  } else if (name.includes("farmer") || name.includes("agriculture") || name.includes("kisan")) {
     category = "Agriculture";
     description = "Financial assistance for small farmers.";
     eligibility = ["Landholding up to 2 hectares", "Farmer ID card", "No default on previous loans"];
@@ -57,7 +54,7 @@ function generateFallbackData(schemeName, lang) {
     eligibility = ["EWS/LIG category", "No pucca house", "Annual income below ₹3 lakh"];
     benefits = ["Subsidy up to ₹2.5 lakh", "Low-interest loan"];
     documents = ["Income certificate", "Aadhar card", "Property documents"];
-  } else if (name.includes("loan") || name.includes("credit")) {
+  } else if (name.includes("loan") || name.includes("credit") || name.includes("business")) {
     category = "Loan";
     description = "Subsidized loan for small businesses.";
     eligibility = ["Age 18–55", "Business plan", "No default history"];
@@ -65,7 +62,6 @@ function generateFallbackData(schemeName, lang) {
     documents = ["Business plan", "Identity proof", "Bank statements"];
   }
 
-  // If language is Hindi or Marathi, we'd ideally translate, but keep as is for now
   return {
     name: schemeName,
     description,
@@ -80,15 +76,13 @@ function generateFallbackData(schemeName, lang) {
 router.get("/:schemeId", async (req, res) => {
   try {
     const { schemeId } = req.params;
-    const lang = req.query.lang || "en"; // 'en', 'hi', 'mr'
+    const lang = req.query.lang || "en";
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(schemeId);
 
     // 1️⃣ Database scheme
     if (isObjectId) {
       const scheme = await Scheme.findById(schemeId);
-      if (!scheme) {
-        return res.status(404).json({ message: "Scheme not found" });
-      }
+      if (!scheme) return res.status(404).json({ message: "Scheme not found" });
 
       const getField = (field) => scheme[`${field}_${lang}`] || scheme[`${field}_en`] || scheme[field] || "";
       const eligibilityCriteria = getField("eligibility").split("\n").filter(Boolean);
@@ -106,60 +100,35 @@ router.get("/:schemeId", async (req, res) => {
     }
 
     // 2️⃣ LLM-generated scheme (plain name)
+    // First, try fallback logic to see if we have hardcoded data for speed
+    // But user wants LLM for specific details, so we use LLM primarily.
+
     let llmData = null;
     try {
-      // Language instruction
-      let languageInstruction = "";
-      if (lang === "hi") {
-        languageInstruction = "Respond in Hindi.";
-      } else if (lang === "mr") {
-        languageInstruction = "Respond in Marathi.";
-      } else {
-        languageInstruction = "Respond in English.";
-      }
-
       const prompt = `
-You are a civic assistant. Generate detailed, realistic information about the Indian government scheme named "${schemeId}".
-${languageInstruction}
-Include the following fields in JSON format:
-{
-  "name": "string",
-  "description": "string (a brief overview of the scheme)",
-  "category": "string (e.g., Pension, Health, Education, Agriculture, Housing, etc.)",
-  "eligibilityCriteria": ["string", "string", ...] (list 2-4 specific criteria),
-  "benefits": ["string", "string", ...] (list 2-4 specific benefits),
-  "requiredDocuments": ["string", "string", ...] (list 2-4 specific documents)
-}
-Make the content realistic and factual. Use actual government scheme details if you know them. If the scheme name is unknown, create a plausible but realistic scheme based on the name.
-Return ONLY the JSON object.
-`;
+        You are a civic assistant. Generate detailed information for the scheme: "${schemeId}" in ${lang === 'hi' ? 'Hindi' : lang === 'mr' ? 'Marathi' : 'English'}.
+        
+        Return JSON object with:
+        - name
+        - description (2 sentences)
+        - category (Health, Education, Agriculture, etc.)
+        - eligibilityCriteria (Array of strings, 3-5 bullets)
+        - benefits (Array of strings, 3-5 bullets)
+        - requiredDocuments (Array of strings, 3-5 bullets)
+        
+        If precise details are unknown, hallu... I mean, infer plausible details based on the scheme name.
+      `;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const output = response.text();
-      console.log(`Gemini raw output (${lang}):`, output); // Debug
+      // console.log("Gemini Output:", output);
 
-      const safeJSON = extractJSON(output);
-      llmData = JSON.parse(safeJSON);
+      llmData = JSON.parse(extractJSON(output));
+
     } catch (geminiErr) {
-      console.error("Gemini error:", geminiErr.message);
-      // If first attempt fails, try one more time with a simpler prompt
-      try {
-        const simplePrompt = `
-Generate realistic details for an Indian government scheme called "${schemeId}".
-Return JSON with fields: name, description, category, eligibilityCriteria (array), benefits (array), requiredDocuments (array).
-Use ${lang === 'hi' ? 'Hindi' : lang === 'mr' ? 'Marathi' : 'English'}.
-        `;
-        const result = await model.generateContent(simplePrompt);
-        const response = await result.response;
-        const output = response.text();
-        const safeJSON = extractJSON(output);
-        llmData = JSON.parse(safeJSON);
-      } catch (secondErr) {
-        console.error("Second Gemini attempt also failed:", secondErr.message);
-        // Use intelligent fallback based on scheme name
-        llmData = generateFallbackData(schemeId, lang);
-      }
+      console.error("Gemini failed, using fallback:", geminiErr.message);
+      llmData = generateFallbackData(schemeId, lang);
     }
 
     // Ensure all fields exist
@@ -184,6 +153,49 @@ Use ${lang === 'hi' ? 'Hindi' : lang === 'mr' ? 'Marathi' : 'English'}.
       eligibilityCriteria: ["Please check official sources"],
       benefits: ["Please check official sources"],
       requiredDocuments: ["Please check official sources"]
+    });
+  }
+});
+
+// 3️⃣ Check Eligibility logic (Rule + LLM)
+router.post("/check", async (req, res) => {
+  try {
+    const { schemeData, userProfile } = req.body;
+
+    if (!schemeData || !userProfile) {
+      return res.status(400).json({
+        status: "Error",
+        reason: "Missing scheme data or user profile."
+      });
+    }
+
+    // Import the engine dynamically or ensure it's required at top
+    const { checkEligibility } = require("../services/eligibilityEngine");
+
+    // Construct a "scheme" object that the engine expects
+    // If schemeData has an ID, we might want to fetch it fully, but for now use what's passed
+    // schemeData can be the full scheme object from frontend
+
+    // The engine expects: { name_en, description_en, eligibility_en }
+    // Frontend might pass: { name, description, eligibilityCriteria }
+    // Let's normalize it
+    const normalizedScheme = {
+      name_en: schemeData.name || schemeData.name_en,
+      description_en: schemeData.description || schemeData.description_en,
+      eligibility_en: Array.isArray(schemeData.eligibilityCriteria)
+        ? schemeData.eligibilityCriteria.join(". ")
+        : (schemeData.eligibility || "")
+    };
+
+    const result = await checkEligibility("check_eligibility", userProfile, normalizedScheme);
+
+    return res.json(result);
+
+  } catch (err) {
+    console.error("Eligibility check error:", err);
+    res.status(500).json({
+      status: "Error",
+      reason: "Internal server error during check."
     });
   }
 });
