@@ -39,7 +39,7 @@ const getSchemes = async (req, res) => {
 // 2. Search with Gemini API
 const searchWithGeminiAPI = async (req, res) => {
   const { keyword, language = "en" } = req.query;
-  
+
   if (!keyword || keyword.trim() === "") {
     return res.json({
       success: false,
@@ -48,28 +48,28 @@ const searchWithGeminiAPI = async (req, res) => {
     });
   }
   const genAI = new GoogleGenerativeAI("AIzaSyDSpSKwjpTy_w2Fw0r5LVnkaD91GDUd7IA");
-  
+
   try {
     console.log(`🔍 Searching for: "${keyword}"`);
-    
+
     // 1. FIRST: Search in local MongoDB
     let localResults = [];
     const regex = new RegExp(keyword, "i");
-    
+
     if (language === "en") {
-      localResults = await Scheme.find({ 
-        $or: [{ name_en: regex }, { description_en: regex }] 
+      localResults = await Scheme.find({
+        $or: [{ name_en: regex }, { description_en: regex }]
       });
     } else if (language === "hi") {
-      localResults = await Scheme.find({ 
-        $or: [{ name_hi: regex }, { description_hi: regex }] 
+      localResults = await Scheme.find({
+        $or: [{ name_hi: regex }, { description_hi: regex }]
       });
     } else if (language === "mr") {
-      localResults = await Scheme.find({ 
-        $or: [{ name_mr: regex }, { description_mr: regex }] 
+      localResults = await Scheme.find({
+        $or: [{ name_mr: regex }, { description_mr: regex }]
       });
     }
-    
+
     // 2. If found in local DB, return them
     if (localResults.length > 0) {
       return res.json({
@@ -80,10 +80,10 @@ const searchWithGeminiAPI = async (req, res) => {
         message: `Found ${localResults.length} scheme(s) in local database`
       });
     }
-    
+
     // 3. If NOT found locally, use MOCK EXTERNAL DATA (for now)
     console.log("🌐 No local results, returning mock external data...");
-    
+
     // Mock external data (replace with Gemini API later)
     const externalResults = [
       {
@@ -104,7 +104,7 @@ const searchWithGeminiAPI = async (req, res) => {
         isExternal: true
       }
     ];
-    
+
     return res.json({
       success: true,
       source: "external_api",
@@ -112,7 +112,7 @@ const searchWithGeminiAPI = async (req, res) => {
       schemes: externalResults,
       message: `No local results found. Showing external data for "${keyword}"`
     });
-    
+
   } catch (error) {
     console.error("Search error:", error);
     res.status(500).json({
@@ -127,7 +127,7 @@ const searchWithGeminiAPI = async (req, res) => {
 const getSchemeDetails = async (req, res) => {
   const { id } = req.params;
   const { language = "en" } = req.query;
-  
+
   try {
     // Check if it's an external scheme
     if (id.startsWith("ext-")) {
@@ -145,17 +145,17 @@ const getSchemeDetails = async (req, res) => {
         language: language
       });
     }
-    
+
     // Get from local DB
     const scheme = await Scheme.findById(id);
-    
+
     if (!scheme) {
       return res.status(404).json({
         success: false,
         message: "Scheme not found"
       });
     }
-    
+
     // Return scheme in requested language
     const response = {
       _id: scheme._id,
@@ -165,13 +165,13 @@ const getSchemeDetails = async (req, res) => {
       category: scheme[`category_${language}`],
       isExternal: false
     };
-    
+
     res.json({
       success: true,
       scheme: response,
       language: language
     });
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -182,7 +182,7 @@ const getSchemeDetails = async (req, res) => {
 };
 
 // 4. Export ALL functions
-module.exports = { 
+module.exports = {
   getSchemes,           // ✅ This must be defined
   searchWithGeminiAPI,  // ✅ Renamed for consistency
   getSchemeDetails      // ✅ This is new
