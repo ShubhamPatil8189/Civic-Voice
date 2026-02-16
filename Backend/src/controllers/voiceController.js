@@ -19,7 +19,7 @@ exports.processVoice = async (req, res) => {
       const query = userId ? { userId } : { sessionId };
       const recent = await Conversation.find(query)
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(10) // Increased for better recall
         .lean();
       history = recent.reverse().map(msg => ({
         role: msg.question ? "user" : "assistant",
@@ -55,10 +55,22 @@ exports.processVoice = async (req, res) => {
     const eligibility = await checkEligibility(intentData.intent, userProfile || {}, specificScheme);
 
     // 5. Response Construction
+    let finalExplanation = intentData.explanation;
+
+    // Feature: Alternative Path Suggestion
+    if (eligibility && !eligibility.isEligible && specificScheme) {
+      const altScheme = directMatches.find(s => s.id !== specificScheme.id);
+      if (altScheme) {
+        finalExplanation += ` You may not qualify for ${specificScheme.name_en}, but you might be interested in ${altScheme.name_en}.`;
+      } else {
+        finalExplanation += " You may not qualify for this, but please check our other schemes.";
+      }
+    }
+
     const responseData = {
       transcript: text,
       language,
-      intentData,
+      intentData: { ...intentData, explanation: finalExplanation },
       eligibility,
       matchedSchemes: directMatches, // Send raw matches too, frontend can decide to show them
       source: "hybrid_reasoning",
