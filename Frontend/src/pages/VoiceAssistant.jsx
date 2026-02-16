@@ -29,12 +29,21 @@ const getSessionId = () => {
   return sessionId;
 };
 
+const getValidLanguage = (lang) => {
+  if (!lang) return "en";
+  if (languageConfig[lang]) return lang;
+  const prefix = lang.split("-")[0];
+  if (languageConfig[prefix]) return prefix;
+  return "en";
+};
+
 const VoiceAssistant = () => {
   const { t, i18n } = useTranslation();
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [assistantText, setAssistantText] = useState("");
-  const [language, setLanguage] = useState(i18n.language || localStorage.getItem("lang") || "en");
+  const initialLang = getValidLanguage(i18n.language || localStorage.getItem("lang"));
+  const [language, setLanguage] = useState(initialLang);
   const [matchedSchemes, setMatchedSchemes] = useState([]);
   const [queryText, setQueryText] = useState("");
   const [showLangDropdown, setShowLangDropdown] = useState(false);
@@ -243,7 +252,7 @@ const VoiceAssistant = () => {
                 className="flex items-center gap-2 px-4 py-2 rounded-full border-2 bg-white/80"
               >
                 <Globe className="h-4 w-4 text-blue-600" />
-                <span>{languageConfig[language].label}</span>
+                <span>{languageConfig[language]?.label || "English"}</span>
               </Button>
               {showLangDropdown && (
                 <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-white border rounded-xl shadow-lg z-50 min-w-[120px]">
