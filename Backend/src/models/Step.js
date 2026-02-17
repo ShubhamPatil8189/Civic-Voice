@@ -10,5 +10,4 @@ const StepSchema = new mongoose.Schema({
   estimatedTime: { type: String }
 });
 
-const Step = mongoose.model("Step", StepSchema);
-module.exports = Step;
+module.exports = mongoose.model("Step", StepSchema);
