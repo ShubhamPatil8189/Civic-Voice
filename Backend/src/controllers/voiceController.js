@@ -1,8 +1,11 @@
 const Scheme = require("../models/Scheme");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
+const VoiceSession = require("../models/VoiceSession");
+const UniqueQuery = require("../models/UniqueQuery");
 const { analyzeIntent } = require("../services/geminiService");
 const { checkEligibility } = require("../services/eligibilityEngine");
+const { normalizeQuery, areSimilar } = require("../utils/querySimilarity");
 
 exports.processVoice = async (req, res) => {
   try {
@@ -140,6 +143,60 @@ exports.processVoice = async (req, res) => {
         question: text,
         answer: finalExplanation || intentData.explanation || "Processed request."
       });
+    }
+
+    // 7. Smart FAQ Learning (Query Tracking)
+    try {
+      // 💾 Save raw voice session
+      await VoiceSession.create({
+        spokenText: text,
+        detectedLanguage: language || "en",
+        extractedData: intentData,
+        matchedSchemes: directMatches
+      });
+
+      // 🔍 Track unique queries for FAQ generation
+      if (text && text.trim().length > 3) {
+        const normalized = normalizeQuery(text);
+
+        // Find all unique queries to check for semantic similarity
+        // Ideally, this should be optimized with vector search in production, 
+        // but for hackathon scale, linear scan or simple text index is acceptable.
+        // We'll use the utility function to find a match.
+
+        const allQueries = await UniqueQuery.find();
+        let foundSimilar = null;
+
+        for (const query of allQueries) {
+          if (areSimilar(text, query.originalQuery)) {
+            foundSimilar = query;
+            break;
+          }
+        }
+
+        if (foundSimilar) {
+          // Increment count for existing similar query
+          foundSimilar.searchCount += 1;
+          foundSimilar.lastSearched = new Date();
+          // Add to related variations if unique enough
+          if (!foundSimilar.relatedQueries.includes(text) && text.length < 100) {
+            foundSimilar.relatedQueries.push(text);
+          }
+          await foundSimilar.save();
+        } else {
+          // Create new unique query entry
+          await UniqueQuery.create({
+            normalizedQuery: normalized,
+            originalQuery: text, // Keep original casing/phrasing for better display
+            searchCount: 1,
+            language: language || "en",
+            relatedQueries: []
+          });
+        }
+      }
+    } catch (trackError) {
+      console.error("⚠️ Query tracking failed:", trackError.message);
+      // Don't fail the request, just log it
     }
 
     return res.json(responseData);

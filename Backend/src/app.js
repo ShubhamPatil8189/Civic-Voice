@@ -82,6 +82,7 @@ app.use("/api/eligibility", require("./routes/eligibilityroutes"));
 app.use("/api/scheme", require("./routes/schemeroutes"));
 app.use("/api/voice", require("./routes/Voiceroutes"));
 app.use("/api/stories", require("./routes/storyRoutes"));
+app.use("/api/faqs", require("./routes/faqRoutes"));
 
 /* ======================================================
    TEST ROUTE
