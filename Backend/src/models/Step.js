@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const StepSchema = new mongoose.Schema({
   schemeId: { type: mongoose.Schema.Types.ObjectId, ref: "Scheme", required: true },
@@ -11,4 +11,4 @@ const StepSchema = new mongoose.Schema({
 });
 
 const Step = mongoose.model("Step", StepSchema);
-export default Step;
+module.exports = Step;

@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { 
-  getSchemes, 
+const {
+  getSchemes,
   searchWithGeminiAPI,  // Changed from searchWithExternalAPI
-  getSchemeDetails 
+  getSchemeDetails
 } = require("../controllers/schemeController");
 
 // GET all schemes
