@@ -105,44 +105,78 @@ const searchWithGeminiAPI = async (req, res) => {
       });
     }
 
-    // 3. If NOT found locally, use MOCK EXTERNAL DATA (for now)
-    console.log("🌐 No local results, returning mock external data...");
+    // 3. If NOT found locally, use GEMINI API for suggestions
+    console.log("🌐 No local results, asking Gemini for suggestions...");
 
-    // Mock external data (replace with Gemini API later)
-    const externalResults = [
+    const model = genAI.getGenerativeModel({
+      model: "gemini-flash-latest",
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const prompt = `
+      You are a civic scheme expert. The user is searching for: "${keyword}" in ${language}.
+      The scheme was not found in our database.
+      
+      List 3-5 real government schemes that closely match this search.
+      
+      Return JSON object with a "schemes" array, where each item has:
+      - name (Exact official name)
+      - description (1 sentence summary)
+      - category (e.g. Health, Education, Welfare)
+      - eligibility (Short eligibility summary)
+      
+      Example Item:
       {
-        _id: `ext-${Date.now()}-1`,
-        name_en: `${keyword} Central Government Scheme`,
-        name_hi: `${keyword} केंद्र सरकार योजना`,
-        name_mr: `${keyword} केंद्र सरकार योजना`,
-        description_en: `This is an external government scheme related to "${keyword}".`,
-        description_hi: `यह "${keyword}" से संबंधित एक बाहरी सरकारी योजना है।`,
-        description_mr: `ही "${keyword}" शी संबंधित एक बाह्य सरकारी योजना आहे.`,
-        eligibility_en: "Check official government website for eligibility",
-        eligibility_hi: "पात्रता के लिए आधिकारिक सरकारी वेबसाइट देखें",
-        eligibility_mr: "पात्रतेसाठी अधिकृत सरकारी वेबसाइट पहा",
-        category_en: "Government",
-        category_hi: "सरकारी",
-        category_mr: "सरकारी",
-        source: "external_api",
-        isExternal: true
+        "name": "Pradhan Mantri Awas Yojana",
+        "description": "Housing scheme for the poor.",
+        "category": "Housing",
+        "eligibility": "Annual income < 3 Lakhs"
       }
-    ];
+      
+      IMPORTANT:
+      - Do NOT make up fake schemes. Only real ones.
+      - If unsure, return an empty array.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().replace(/```json/g, "").replace(/```/g, "").trim();
+    const data = JSON.parse(text);
+
+    // Transform formatting to match our frontend Scheme card expectation
+    const externalResults = (data.schemes || []).map(s => ({
+      _id: s.name, // CRITICAL: Use name as ID so eligibility route can LLM-generate details
+      name_en: s.name,
+      name_hi: s.name, // API usually returns English/mixed, keeping same for now or could prompt for translation
+      name_mr: s.name,
+      description_en: s.description,
+      description_hi: s.description,
+      description_mr: s.description,
+      category_en: s.category,
+      category_hi: s.category,
+      category_mr: s.category,
+      eligibility_en: s.eligibility,
+      source: "gemini_suggestion",
+      isExternal: true
+    }));
 
     return res.json({
       success: true,
-      source: "external_api",
+      source: "gemini_suggestion",
       count: externalResults.length,
       schemes: externalResults,
-      message: `No local results found. Showing external data for "${keyword}"`
+      message: externalResults.length > 0
+        ? `Found ${externalResults.length} related schemes via AI`
+        : `No relevant schemes found for "${keyword}"`
     });
 
   } catch (error) {
     console.error("Search error:", error);
-    res.status(500).json({
+    // Fallback if Gemini fails
+    res.json({
       success: false,
-      message: "Internal server error",
-      error: error.message
+      message: "Could not find schemes nearby. Please try a different verification.",
+      schemes: []
     });
   }
 };
