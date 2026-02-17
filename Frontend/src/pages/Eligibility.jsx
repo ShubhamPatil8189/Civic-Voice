@@ -129,7 +129,22 @@ const EligibilityPage = () => {
     );
   }
 
-  const { name, description, eligibilityCriteria = [], requiredDocuments = [], benefits = [], category, steps = [] } = data;
+  const {
+    name,
+    description,
+    eligibilityCriteria: rawEligibilityCriteria,
+    requiredDocuments: rawRequiredDocuments,
+    benefits: rawBenefits,
+    category,
+    steps: rawSteps,
+    officialWebsite
+  } = data;
+
+  // Defensive array checks to prevent crashes
+  const eligibilityCriteria = Array.isArray(rawEligibilityCriteria) ? rawEligibilityCriteria : [];
+  const requiredDocuments = Array.isArray(rawRequiredDocuments) ? rawRequiredDocuments : [];
+  const benefits = Array.isArray(rawBenefits) ? rawBenefits : [];
+  const steps = Array.isArray(rawSteps) ? rawSteps : [];
 
   const languageLabels = {
     en: { label: "English", flag: "🇺🇸" },
@@ -162,6 +177,19 @@ const EligibilityPage = () => {
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{name}</h1>
                 <p className="text-xl text-blue-100 max-w-3xl">{description}</p>
+
+                {/* Apply Now Button - Prominent */}
+                {officialWebsite && (
+                  <a
+                    href={officialWebsite}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-6 px-8 py-4 bg-white text-blue-600 rounded-full font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all"
+                  >
+                    <Globe className="h-5 w-5" />
+                    Apply Now - Official Website
+                  </a>
+                )}
               </div>
 
               <div className="flex flex-col gap-4">
@@ -345,20 +373,24 @@ const EligibilityPage = () => {
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">{t('eligibility_page.sidebar.application_process')}</h3>
                 <div className="space-y-3">
-                  {steps.map((step, index) => (
-                    <div key={step._id} className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">{index + 1}</span>
+                  {steps && steps.length > 0 ? (
+                    steps.map((step, index) => (
+                      <div key={step._id || index} className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">{index + 1}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800">{step.title || step.stepTitle || `Step ${index + 1}`}</p>
+                          <p className="text-sm text-gray-600">{step.action || step.description || ""}</p>
+                          {step.location && <p className="text-sm text-gray-500"><em>Location:</em> {step.location}</p>}
+                          {step.why && <p className="text-sm text-gray-500"><em>Why:</em> {step.why}</p>}
+                          {step.estimatedTime && <p className="text-sm text-gray-500"><em>Time:</em> {step.estimatedTime}</p>}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-800">{step.title}</p>
-                        <p className="text-sm text-gray-600">{step.action}</p>
-                        {step.location && <p className="text-sm text-gray-500"><em>Location:</em> {step.location}</p>}
-                        {step.why && <p className="text-sm text-gray-500"><em>Why:</em> {step.why}</p>}
-                        {step.estimatedTime && <p className="text-sm text-gray-500"><em>Estimated Time:</em> {step.estimatedTime}</p>}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">Visit the official website for detailed application process.</p>
+                  )}
                 </div>
               </div>
 

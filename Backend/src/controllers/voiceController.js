@@ -1,8 +1,11 @@
 const Scheme = require("../models/Scheme");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
+const VoiceSession = require("../models/VoiceSession");
+const UniqueQuery = require("../models/UniqueQuery");
 const { analyzeIntent } = require("../services/geminiService");
 const { checkEligibility } = require("../services/eligibilityEngine");
+const { normalizeQuery, areSimilar } = require("../utils/querySimilarity");
 
 exports.processVoice = async (req, res) => {
   try {
@@ -27,15 +30,49 @@ exports.processVoice = async (req, res) => {
       }));
     }
 
-    // 1. Context Retrieval (Database Search)
-    const regex = new RegExp(text, "i");
-    const directMatches = await Scheme.find({
-      $or: [
-        { name_en: regex }, { description_en: regex },
-        { name_hi: regex }, { description_hi: regex },
-        { name_mr: regex }, { description_mr: regex }
-      ]
-    }).limit(5).select("name_en description_en id");
+    // 1. Smart Query Analysis (LLM First)
+    const { analyzeQuery } = require("../services/geminiService");
+    const analysis = await analyzeQuery(text);
+    console.log("🧠 Query Analysis:", analysis);
+
+    let directMatches = [];
+
+    // 2. Conditional Database Search
+    if (analysis.intent === "scheme_search" && analysis.keywords.length > 0) {
+      // Construct robust $or query with extracted keywords
+      const searchConditions = analysis.keywords.flatMap(kw => {
+        const regex = new RegExp(kw, "i");
+        return [
+          { name_en: regex }, { description_en: regex },
+          { name_hi: regex }, { description_hi: regex },
+          { name_mr: regex }, { description_mr: regex }
+        ];
+      });
+
+      directMatches = await Scheme.find({ $or: searchConditions })
+        .limit(5)
+        .select("name_en description_en id");
+
+      console.log(`🔎 Found ${directMatches.length} schemes matching keywords: ${analysis.keywords.join(", ")}`);
+    } else {
+      console.log("⏩ Skipping DB search for general doubt/chat.");
+    }
+
+    // Strategy B: Keyword fallback if A fails
+    if (directMatches.length === 0) {
+      const keywords = ["pension", "scholarship", "health", "farmer", "housing", "education", "loan", "widow"];
+      const foundKeywords = keywords.filter(k => text.toLowerCase().includes(k));
+
+      if (foundKeywords.length > 0) {
+        const keywordRegex = new RegExp(foundKeywords.join("|"), "i");
+        directMatches = await Scheme.find({
+          $or: [
+            { name_en: keywordRegex }, { description_en: keywordRegex },
+            { category_en: keywordRegex }
+          ]
+        }).limit(5).select("name_en description_en id");
+      }
+    }
 
     // 2. User Context
     let userProfile = null;
@@ -45,20 +82,40 @@ exports.processVoice = async (req, res) => {
 
     // 3. Cognitive Processing (Gemini)
     // Pass directMatches as context to help Gemini understand what we have in DB
-    const intentData = await analyzeIntent(text, history, directMatches);
+    // Check if conversation is long (e.g. > 10 messages) to maintenance trigger summary offer
+    // Since history contains user+assistant messages, 10 messages = 5 turns.
+    const isLongConversation = history.length >= 10;
+
+    const intentData = await analyzeIntent(text, history, directMatches, isLongConversation);
 
     // 4. Eligibility & Logic
     const specificScheme = intentData.suggested_schemes && intentData.suggested_schemes.length > 0
-      ? directMatches.find(s => s.name_en === intentData.suggested_schemes[0].name) || directMatches[0]
-      : directMatches[0];
+      ? directMatches.find(s => s.name_en === intentData.suggested_schemes[0].name)
+      : null;
+
+    let finalExplanation = intentData.explanation;
+
+    // Feature: Graceful Failure & Safe Exit (Backend Safety Net)
+    if (intentData.confidence < 0.6) {
+      const exitMessage = "For the most accurate guidance, please visit your local Tehsil office or call the toll-free helpline 1905.";
+      if (!finalExplanation.includes("1905")) {
+        finalExplanation += ` ${exitMessage}`;
+      }
+    }
 
     const eligibility = await checkEligibility(intentData.intent, userProfile || {}, specificScheme);
 
     // 5. Response Construction
-    let finalExplanation = intentData.explanation;
+    // finalExplanation is already declared and potentially modified above
 
     // Feature: Alternative Path Suggestion
-    if (eligibility && !eligibility.isEligible && specificScheme) {
+    // Check various flags for backward compatibility
+    const isIneligible =
+      (eligibility && eligibility.isEligible === false) ||
+      (eligibility && eligibility.eligible === false) ||
+      (eligibility && eligibility.status === "Not Eligible");
+
+    if (isIneligible && specificScheme) {
       const altScheme = directMatches.find(s => s.id !== specificScheme.id);
       if (altScheme) {
         finalExplanation += ` You may not qualify for ${specificScheme.name_en}, but you might be interested in ${altScheme.name_en}.`;
@@ -74,7 +131,8 @@ exports.processVoice = async (req, res) => {
       eligibility,
       matchedSchemes: directMatches, // Send raw matches too, frontend can decide to show them
       source: "hybrid_reasoning",
-      navigation: intentData.navigation_step || null
+      navigation: intentData.navigation_step || null,
+      explanation: finalExplanation
     };
 
     // 6. Memory Consolidation (Save)
@@ -83,8 +141,62 @@ exports.processVoice = async (req, res) => {
         sessionId: sessionId || null,
         userId: userId || null,
         question: text,
-        answer: intentData.explanation || "Processed request."
+        answer: finalExplanation || intentData.explanation || "Processed request."
       });
+    }
+
+    // 7. Smart FAQ Learning (Query Tracking)
+    try {
+      // 💾 Save raw voice session
+      await VoiceSession.create({
+        spokenText: text,
+        detectedLanguage: language || "en",
+        extractedData: intentData,
+        matchedSchemes: directMatches
+      });
+
+      // 🔍 Track unique queries for FAQ generation
+      if (text && text.trim().length > 3) {
+        const normalized = normalizeQuery(text);
+
+        // Find all unique queries to check for semantic similarity
+        // Ideally, this should be optimized with vector search in production, 
+        // but for hackathon scale, linear scan or simple text index is acceptable.
+        // We'll use the utility function to find a match.
+
+        const allQueries = await UniqueQuery.find();
+        let foundSimilar = null;
+
+        for (const query of allQueries) {
+          if (areSimilar(text, query.originalQuery)) {
+            foundSimilar = query;
+            break;
+          }
+        }
+
+        if (foundSimilar) {
+          // Increment count for existing similar query
+          foundSimilar.searchCount += 1;
+          foundSimilar.lastSearched = new Date();
+          // Add to related variations if unique enough
+          if (!foundSimilar.relatedQueries.includes(text) && text.length < 100) {
+            foundSimilar.relatedQueries.push(text);
+          }
+          await foundSimilar.save();
+        } else {
+          // Create new unique query entry
+          await UniqueQuery.create({
+            normalizedQuery: normalized,
+            originalQuery: text, // Keep original casing/phrasing for better display
+            searchCount: 1,
+            language: language || "en",
+            relatedQueries: []
+          });
+        }
+      }
+    } catch (trackError) {
+      console.error("⚠️ Query tracking failed:", trackError.message);
+      // Don't fail the request, just log it
     }
 
     return res.json(responseData);

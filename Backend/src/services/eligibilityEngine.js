@@ -70,7 +70,14 @@ exports.checkEligibility = async (intent, user = {}, specificScheme = null) => {
     if (ruleResult) return ruleResult;
 
     // 2. Try LLM
-    return await checkLLM(specificScheme, user);
+    const llmResult = await checkLLM(specificScheme, user);
+
+    // Normalize LLM result to match Rule result structure
+    return {
+      ...llmResult,
+      isEligible: llmResult.status === "Eligible",
+      eligible: llmResult.status === "Eligible"
+    };
   }
 
   // Fallback for generic intent (Legacy behavior or generic advice)

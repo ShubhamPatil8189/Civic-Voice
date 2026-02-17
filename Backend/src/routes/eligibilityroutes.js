@@ -5,7 +5,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: "gemini-flash-latest",
   generationConfig: { responseMimeType: "application/json" }
 });
 
@@ -16,7 +16,6 @@ function extractJSON(text) {
 
 // Generate fallback data based on scheme name keywords (used if Gemini fails)
 function generateFallbackData(schemeName, lang) {
-  // ... existing fallback code ...
   const name = schemeName.toLowerCase();
   let category = "General";
   let description = "Government scheme for citizen welfare.";
@@ -72,10 +71,7 @@ function generateFallbackData(schemeName, lang) {
   };
 }
 
-// Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
 const Step = require("../models/Step"); // Import Step model
-
-// ... (existing imports and setup)
 
 // Unified endpoint – handles both MongoDB ObjectIds and plain scheme names
 router.get("/:schemeId", async (req, res) => {
@@ -84,27 +80,105 @@ router.get("/:schemeId", async (req, res) => {
     const lang = req.query.lang || "en";
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(schemeId);
 
-    let schemeData = null;
-    let stepsData = [];
-
-    // 1️⃣ Database scheme
+    // 1️⃣ Database scheme - Enhanced with LLM Analysis
     if (isObjectId) {
-      const scheme = await Scheme.findById(schemeId);
+      const scheme = await Scheme.findById(schemeId).lean();
       if (!scheme) return res.status(404).json({ message: "Scheme not found" });
 
-      const getField = (field) => scheme[`${field}_${lang}`] || scheme[`${field}_en`] || scheme[field] || "";
-      const eligibilityCriteria = getField("eligibility").split("\n").filter(Boolean);
-      const benefits = getField("benefits").split("\n").filter(Boolean);
+      const steps = scheme.applicationProcess?.steps || [];
+      const isStepsMessy = steps.length === 1 && (steps[0].description || steps[0].stepTitle || "").length > 300;
 
-      return res.json({
-        _id: scheme._id,
-        name: getField("name"),
-        description: getField("description"),
-        category: getField("category"),
-        eligibilityCriteria,
-        benefits,
-        requiredDocuments: scheme.documentsRequired || []
-      });
+      const hasRichData = scheme.eligibilityCriteria &&
+        (Array.isArray(scheme.benefits) && scheme.benefits.length > 0) &&
+        (Array.isArray(scheme.documents) && scheme.documents.length > 0) &&
+        !isStepsMessy;
+
+      if (hasRichData) {
+        // console.log(`✅ Using rich CSV data for scheme: ${scheme.name_en || scheme.name}`);
+        const getField = (field) => scheme[`${field}_${lang}`] || scheme[`${field}_en`] || scheme[field] || "";
+        const summarizeLocally = (text) => {
+          if (!text) return "";
+          if (text.length < 300) return text;
+          const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+          return sentences.slice(0, 2).join(" ") + (sentences.length > 2 ? ".." : "");
+        };
+
+        const rawDescription = getField("description");
+        const cleanDescription = summarizeLocally(rawDescription);
+
+        let eligibilityCriteria = [];
+        if (scheme.eligibilityCriteria) {
+          const ec = scheme.eligibilityCriteria;
+          if (ec.minAge || ec.maxAge) eligibilityCriteria.push(`Age: ${ec.minAge || 0} - ${ec.maxAge || 100} years`);
+          if (ec.incomeLessThan) eligibilityCriteria.push(`Annual Income: Less than ₹${ec.incomeLessThan.toLocaleString('en-IN')}`);
+          if (ec.bplRequired) eligibilityCriteria.push("BPL Card Required");
+          if (ec.householdType && ec.householdType !== "Both") eligibilityCriteria.push(`Household Type: ${ec.householdType}`);
+          if (ec.studentRequired) eligibilityCriteria.push("Must be a Student");
+          if (ec.disabilityRequired) eligibilityCriteria.push("Disability Certificate Required");
+        }
+
+        const cleanSteps = steps.map((s, i) => ({
+          stepTitle: s.stepTitle || `Step ${i + 1}`,
+          description: s.description || s.action || "",
+          estimatedTime: s.estimatedTime || ""
+        }));
+
+        return res.json({
+          _id: scheme._id,
+          name: getField("name"),
+          description: cleanDescription,
+          category: scheme.category || "Government Scheme",
+          eligibilityCriteria: eligibilityCriteria.length > 0 ? eligibilityCriteria : ["Open to all eligible citizens"],
+          benefits: Array.isArray(scheme.benefits) ? scheme.benefits : [],
+          requiredDocuments: scheme.documents || scheme.documentsRequired || [],
+          steps: cleanSteps,
+          officialWebsite: scheme.officialWebsite || null
+        });
+      }
+
+      // If CSV data is incomplete, use LLM for enrichment
+      // console.log(`🧠 Using LLM to enrich incomplete data for: ${scheme.name_en || scheme.name}`);
+
+      try {
+        const prompt = `You are analyzing a government scheme from the database. Provide clear information.
+        
+Scheme: ${scheme.name_en || scheme.name}
+Description: ${scheme.description_en || scheme.description}
+Existing Steps: ${JSON.stringify(scheme.applicationProcess?.steps || [])}
+
+Task: Generate 3-4 CONCISE Application Steps. If existing steps are detailed, summarize them.
+Return JSON: { "applicationSteps": [{ "stepTitle": "Title", "description": "Desc", "estimatedTime": "Time" }] }
+`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const jsonText = extractJSON(response.text());
+        const llmData = JSON.parse(jsonText);
+
+        const steps = llmData.applicationSteps || [];
+
+        return res.json({
+          _id: scheme._id,
+          name: scheme.name_en || scheme.name,
+          description: scheme.description_en || scheme.description,
+          category: scheme.category,
+          eligibilityCriteria: scheme.eligibilityCriteria, // Use existing if not enriching fully
+          benefits: scheme.benefits || [],
+          requiredDocuments: scheme.documents || [],
+          steps: steps,
+          officialWebsite: scheme.officialWebsite || null
+        });
+
+      } catch (llmError) {
+        // Fallback to raw data if LLM fails for enrichment
+        // ... (simplified fallback logic for brevity/robustness)
+        return res.json({
+          _id: scheme._id,
+          name: scheme.name_en || scheme.name,
+          description: scheme.description_en || scheme.description,
+          steps: []
+        });
+      }
     }
 
     // 2️⃣ LLM-generated scheme (plain name)
@@ -123,8 +197,10 @@ router.get("/:schemeId", async (req, res) => {
         - eligibilityCriteria (Array of strings, 3-5 bullets)
         - benefits (Array of strings, 3-5 bullets)
         - requiredDocuments (Array of strings, 3-5 bullets)
+        - applicationSteps (Array of objects looking like: { "stepTitle": "Step Name", "description": "Action to take", "estimatedTime": "Time" })
         
-        If precise details are unknown, hallu... I mean, infer plausible details based on the scheme name.
+        IMPORTANT: You MUST provide "applicationSteps" so the user knows how to apply.
+        If precise details are unknown, infer plausible standard government procedures (e.g., "Visit official website", "Register", "Upload documents").
       `;
 
       const result = await model.generateContent(prompt);
@@ -134,9 +210,23 @@ router.get("/:schemeId", async (req, res) => {
 
       llmData = JSON.parse(extractJSON(output));
 
+      // Map applicationSteps to 'steps' for frontend compatibility
+      const steps = Array.isArray(llmData.applicationSteps) ? llmData.applicationSteps : [];
+
+      // Ensure all list fields are actually arrays to prevent frontend crashes
+      llmData.eligibilityCriteria = Array.isArray(llmData.eligibilityCriteria) ? llmData.eligibilityCriteria : [];
+      llmData.benefits = Array.isArray(llmData.benefits) ? llmData.benefits : [];
+      llmData.requiredDocuments = Array.isArray(llmData.requiredDocuments) ? llmData.requiredDocuments : [];
+      llmData.steps = steps;
+
     } catch (geminiErr) {
       console.error("Gemini failed, using fallback:", geminiErr.message);
       llmData = generateFallbackData(schemeId, lang);
+      // Add generic steps to fallback
+      llmData.steps = [
+        { stepTitle: "Check Official Website", description: "Visit the respective department website for details.", estimatedTime: "5 mins" },
+        { stepTitle: "Visit Local Office", description: "Contact your nearest Tehsil or Ward office.", estimatedTime: "1 hour" }
+      ];
     }
 
     // Ensure ID is set

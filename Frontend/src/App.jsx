@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import VoiceAssistant from "./pages/VoiceAssistant";
 import Eligibility from "./pages/Eligibility";
 import Schemes from "./pages/Schemes";
+import CategorySchemes from "./pages/CategorySchemes";
 import About from "./pages/About";
 import Help from "./pages/Help";
 import StepGuide from "./pages/StepGuide";
@@ -60,6 +61,7 @@ const App = () => (
               {/* Voice assistant */}
               <Route path="/voice-assistant" element={<VoiceAssistant />} />
               <Route path="/schemes" element={<Schemes />} />
+              <Route path="/schemes/category/:categoryName" element={<CategorySchemes />} />
               <Route path="/about" element={<About />} />
               <Route path="/help" element={<Help />} />
               <Route path="/eligibility/:schemeId" element={<Eligibility />} />
