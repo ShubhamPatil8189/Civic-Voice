@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -28,11 +28,42 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const EligibilityPage = () => {
   const { t, i18n } = useTranslation();
   const { schemeId } = useParams();
+  const navigate = useNavigate(); // Added navigation hook
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("eligibility");
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false); // Fix: Define this state
+
+  const handleSuggestAlternatives = async () => {
+    setLoadingSuggestions(true);
+    try {
+      // Get User Profile again (or store it in state if possible, but fetching checking is safer)
+      const userRes = await authAPI.getCurrentUser();
+      const userProfile = userRes.data.user;
+
+      const res = await fetch(`${BACKEND_URL}/api/eligibility/suggest-alternatives`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userProfile: userProfile,
+          originalSchemeName: name,
+          category: category
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setSuggestions(data.suggestions);
+      }
+    } catch (err) {
+      console.error("Failed to get suggestions", err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   const handleCheckEligibility = async () => {
     setChecking(true);
@@ -439,9 +470,9 @@ const EligibilityPage = () => {
       {/* Result Modal/Alert */}
       {checkResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setCheckResult(null)}
+              onClick={() => { setCheckResult(null); setSuggestions([]); }}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <XCircle className="h-6 w-6" />
@@ -457,11 +488,54 @@ const EligibilityPage = () => {
             <h3 className="text-2xl font-bold text-center mb-2">{checkResult.status}</h3>
             <p className="text-center text-gray-600 mb-6">{checkResult.reason}</p>
 
+            {/* Alternative Suggestions Logic */}
+            {checkResult.status === "Not Eligible" && (
+              <div className="mb-6">
+                {!loadingSuggestions && suggestions.length === 0 ? (
+                  <button
+                    onClick={handleSuggestAlternatives}
+                    className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition flex items-center justify-center gap-2"
+                  >
+                    <Target className="h-5 w-5" />
+                    Explore Similar Schemes
+                  </button>
+                ) : loadingSuggestions ? (
+                  <div className="text-center text-gray-500 py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500 mb-2"></div>
+                    <p>Finding better matches for you...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-800 border-b pb-2">You might be eligible for:</h4>
+                    {suggestions.map((s, i) => (
+                      <div
+                        key={i}
+                        onClick={() => {
+                          setCheckResult(null); // Close modal
+                          navigate(`/eligibility/${encodeURIComponent(s.name)}`); // Navigate to scheme
+                        }}
+                        className="p-3 bg-purple-50 rounded-lg border border-purple-100 text-left cursor-pointer hover:bg-purple-100 hover:shadow-md transition-all relative group"
+                      >
+                        <div className="font-bold text-purple-700 flex justify-between items-center">
+                          {s.name}
+                          <ArrowLeft className="h-4 w-4 rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <p className="text-sm text-gray-600">{s.reason}</p>
+                      </div>
+                    ))}
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                      Click on a scheme to apply.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
-              onClick={() => setCheckResult(null)}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+              onClick={() => { setCheckResult(null); setSuggestions([]); }}
+              className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
             >
-              Okay, understood
+              Close
             </button>
           </div>
         </div>
