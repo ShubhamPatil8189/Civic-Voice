@@ -283,4 +283,54 @@ router.post("/check", async (req, res) => {
   }
 });
 
+// 4️⃣ Suggest Alternatives (LLM)
+router.post("/suggest-alternatives", async (req, res) => {
+  try {
+    const { userProfile, originalSchemeName, category } = req.body;
+
+    if (!userProfile) {
+      return res.status(400).json({ error: "Missing user profile" });
+    }
+
+    const prompt = `
+      You are a smart civic assistant.
+      The user applied for the scheme: "${originalSchemeName}" (Category: ${category}) but was found NOT ELIGIBLE.
+      
+      User Profile: ${JSON.stringify(userProfile)}
+      
+      Suggest 3 ALTERNATIVE government schemes (Central or State) that:
+      1. Are in the same or similar category (e.g. if they wanted a loan, suggest other loans/grants).
+      2. The user is highly likely to be ELIGIBLE for based on their profile.
+      
+      Return JSON object with key "suggestions":
+      [
+        {
+          "name": "Scheme Name",
+          "reason": "Why they are eligible (1 sentence)",
+          "category": "Scheme Category"
+        }
+      ]
+      
+      IMPORTANT:
+      - Only real schemes.
+      - Return exactly 3 suggestions.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const jsonText = extractJSON(response.text());
+    const data = JSON.parse(jsonText);
+
+    res.json({
+      success: true,
+      suggestions: data.suggestions || []
+    });
+
+  } catch (error) {
+    console.error("Alternative suggestion error:", error);
+    // Fallback: Return empty list rather than crash
+    res.json({ success: false, suggestions: [] });
+  }
+});
+
 module.exports = router;
