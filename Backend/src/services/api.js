@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -8,43 +7,27 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 10000,
 });
-
-// Add request interceptor for logging
-api.interceptors.request.use(
-    (config) => {
-        console.log(`📡 ${config.method.toUpperCase()} ${config.url}`);
-        return config;
-    },
-    (error) => {
-        console.error('Request Error:', error);
-        return Promise.reject(error);
-    }
-);
-
-// Add response interceptor for logging
-api.interceptors.response.use(
-    (response) => {
-        console.log(`✅ ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status}`);
-        return response;
-    },
-    (error) => {
-        console.error(`❌ API Error:`, error.response?.data || error.message);
-        return Promise.reject(error);
-    }
-);
 
 export const authAPI = {
     // Login
     login: async (credentials) => {
         try {
+            console.log('Attempting login with:', credentials.email);
             const response = await api.post('/auth/login', credentials);
+            console.log('Login response:', response.data);
+            
             if (response.data.success) {
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             }
             return response;
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('Login error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
             throw error;
         }
     },
@@ -63,28 +46,13 @@ export const authAPI = {
         }
     },
     
-    // Get user profile by email
-    getProfile: async (email) => {
-        try {
-            const response = await api.get(`/users/profile/${email}`);
-            return response;
-        } catch (error) {
-            console.error('Get profile error:', error);
-            throw error;
-        }
-    },
-    
     // Update profile by email
     updateProfile: async (email, userData) => {
         try {
-            console.log('Sending update for email:', email);
-            console.log('Update data:', userData);
-            
             const response = await api.put(`/users/profile/${email}`, userData);
-            console.log('Update response:', response.data);
             return response;
         } catch (error) {
-            console.error('Update profile error:', error.response?.data || error.message);
+            console.error('Update profile error:', error);
             throw error;
         }
     },
