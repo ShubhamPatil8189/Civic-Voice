@@ -1,34 +1,58 @@
 const Scheme = require("../models/Scheme");
-const axios = require("axios");
-require('dotenv').config();
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { analyzeQuery } = require("../services/geminiService");
 
-// 1. GET all schemes or filter by keyword - YOU NEED THIS FUNCTION!
+// 1. GET all schemes or filter by keyword/category
 const getSchemes = async (req, res) => {
-  const { keyword, language } = req.query;
+  const { keyword, language, category } = req.query;
+  const fetchLimit = parseInt(req.query.limit) || 50;
 
   try {
-    let schemes;
-    if (!keyword || keyword.trim() === "") {
-      schemes = await Scheme.find();
-    } else {
+    let query = {};
+    let usingSmartSearch = false;
+
+    // 1. Direct Category/Keyword handling
+    if (category && category.trim() !== "") {
+      const escapedCategory = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.category = new RegExp(escapedCategory, "i");
+    }
+
+    if (keyword && keyword.trim() !== "") {
       const regex = new RegExp(keyword, "i");
-      if (language === "en") {
-        schemes = await Scheme.find({ $or: [{ name_en: regex }, { description_en: regex }] });
-      } else if (language === "hi") {
-        schemes = await Scheme.find({ $or: [{ name_hi: regex }, { description_hi: regex }] });
-      } else if (language === "mr") {
-        schemes = await Scheme.find({ $or: [{ name_mr: regex }, { description_mr: regex }] });
-      } else {
-        schemes = await Scheme.find({
-          $or: [
-            { name_en: regex }, { description_en: regex },
-            { name_hi: regex }, { description_hi: regex },
-            { name_mr: regex }, { description_mr: regex },
-          ],
-        });
+      query.$or = [
+        { name_en: regex }, { description_en: regex },
+        { name_hi: regex }, { description_hi: regex },
+        { name_mr: regex }, { description_mr: regex },
+      ];
+    }
+
+    // Try finding with direct matching first (Fast path)
+    let schemes = await Scheme.find(query).limit(fetchLimit);
+
+    // 2. Smart Search Fallback (LLM)
+    // If we have literally 0 results for a 'category' search, it might be a natural language query
+    if (schemes.length === 0 && category && category.trim().length > 3) {
+      console.log(`🤖 No direct results for "${category}", calling Smart Search...`);
+      try {
+        const analysis = await analyzeQuery(category);
+        if (analysis && analysis.keywords && analysis.keywords.length > 0) {
+          const smartKeywords = analysis.keywords.join(" ");
+
+          // Use Mongo Text Index for smart search
+          // This will search Name, Description, and Category fields (as defined in Scheme.js index)
+          schemes = await Scheme.find(
+            { $text: { $search: smartKeywords } },
+            { score: { $meta: "textScore" } }
+          )
+            .sort({ score: { $meta: "textScore" } })
+            .limit(fetchLimit);
+
+          usingSmartSearch = schemes.length > 0;
+        }
+      } catch (llmErr) {
+        console.error("Smart Search failed:", llmErr);
       }
     }
+
     res.json(schemes);
   } catch (err) {
     console.error(err);
