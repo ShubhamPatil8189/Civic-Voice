@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Award, Users, Briefcase, Heart, BookOpen, Leaf, Globe, Search, XCircle, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/layout/Header";
@@ -10,18 +10,32 @@ import { authAPI } from "@/services/api"; // Added
 const Schemes = () => {
   const { t } = useTranslation();
 
+  const navigate = useNavigate();
   const categories = [
-    { icon: Award, title: t('schemes_page.categories.scholarship.title'), count: 48, desc: t('schemes_page.categories.scholarship.desc') },
-    { icon: Users, title: t('schemes_page.categories.women.title'), count: 72, desc: t('schemes_page.categories.women.desc') },
-    { icon: Leaf, title: t('schemes_page.categories.farmers.title'), count: 95, desc: t('schemes_page.categories.farmers.desc') },
-    { icon: Briefcase, title: t('schemes_page.categories.business.title'), count: 60, desc: t('schemes_page.categories.business.desc') },
-    { icon: Heart, title: t('schemes_page.categories.health.title'), count: 40, desc: t('schemes_page.categories.health.desc') },
-    { icon: BookOpen, title: t('schemes_page.categories.skills.title'), count: 35, desc: t('schemes_page.categories.skills.desc') },
+    { icon: Award, title: t('schemes_page.categories.scholarship.title'), count: 48, desc: t('schemes_page.categories.scholarship.desc'), path: "Education" },
+    { icon: Users, title: t('schemes_page.categories.women.title'), count: 72, desc: t('schemes_page.categories.women.desc'), path: "Women" },
+    { icon: Leaf, title: t('schemes_page.categories.farmers.title'), count: 95, desc: t('schemes_page.categories.farmers.desc'), path: "Agriculture" },
+    { icon: Briefcase, title: t('schemes_page.categories.business.title'), count: 60, desc: t('schemes_page.categories.business.desc'), path: "Employment" },
+    { icon: Heart, title: t('schemes_page.categories.health.title'), count: 40, desc: t('schemes_page.categories.health.desc'), path: "Health & Wellness" },
+    { icon: BookOpen, title: t('schemes_page.categories.skills.title'), count: 35, desc: t('schemes_page.categories.skills.desc'), path: "Skill" },
   ];
 
   /* State for Check Eligibility */
   const [checkingId, setCheckingId] = useState(null);
   const [checkResult, setCheckResult] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/schemes/category/${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
   // Reusing the same backend logic
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -112,7 +126,7 @@ const Schemes = () => {
                 <div className="flex items-center gap-3">
                   <div className="accent-dot bg-indigo-500" />
                   <div>
-                    <div className="text-xl font-semibold">350+</div>
+                    <div className="text-xl font-semibold">3340+</div>
                     <div className="text-xs text-muted-foreground">{t('schemes_page.active_schemes')}</div>
                   </div>
                 </div>
@@ -121,17 +135,31 @@ const Schemes = () => {
             </div>
           </div>
 
-          <div>
-            <div className="p-6 bg-gradient-to-tr from-white to-slate-50 rounded-2xl shadow-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative flex-1">
-                  <input className="search-input w-full pl-10" placeholder={t('schemes_page.search_placeholder')} />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div className="flex flex-col gap-6">
+            <div className="p-1 px-1 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.05)] focus-within:shadow-[0_20px_60px_rgba(79,70,229,0.1)] transition-all duration-500 overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-center gap-2 p-2">
+                <div className="relative flex-1 w-full group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors h-5 w-5" />
+                  <input
+                    className="w-full pl-12 pr-4 py-4 bg-transparent border-none focus:outline-none text-slate-700 placeholder:text-slate-400 font-medium transition-all"
+                    placeholder={t('schemes_page.search_placeholder')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
                 </div>
-                <Button className="px-5 py-3">{t('schemes_page.filter')}</Button>
+                <Button
+                  className="w-full sm:w-auto px-8 py-7 rounded-[1.5rem] bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-200/50 hover:shadow-cyan-300/50 transition-all font-bold text-lg border-none"
+                  onClick={handleSearch}
+                >
+                  {t('schemes_page.filter')}
+                </Button>
               </div>
+            </div>
 
-              <p className="text-sm text-muted-foreground">{t('schemes_page.tip')}</p>
+            <div className="flex items-center gap-3 px-4 py-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 text-sm text-slate-500">
+              <AlertCircle className="h-4 w-4 text-indigo-400" />
+              <p className="font-medium italic opacity-80">{t('schemes_page.tip')}</p>
             </div>
           </div>
         </section>
@@ -140,23 +168,32 @@ const Schemes = () => {
           <h2 className="text-2xl font-semibold mb-6 text-center">{t('schemes_page.explore_category')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((c, i) => (
-              <div key={c.title} className="category p-6 bg-white rounded-2xl">
+              <div
+                key={c.title}
+                className="category p-6 bg-white rounded-2xl cursor-pointer group"
+                onClick={() => navigate(`/schemes/category/${encodeURIComponent(c.path)}`)}
+              >
                 <div className="flex items-start gap-4">
-                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg">
+                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
                     <c.icon className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-4">
-                      <h3 className="text-lg font-semibold">{c.title}</h3>
+                      <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">{c.title}</h3>
                       <div className="text-sm text-muted-foreground">{c.count} active</div>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">{c.desc}</p>
 
                     <div className="mt-4 flex items-center gap-3">
-                      <Button asChild variant="ghost"><Link to="/voice-assistant">{t('schemes_page.ask_assistant')}</Link></Button>
+                      <Button asChild variant="ghost" onClick={(e) => e.stopPropagation()}>
+                        <Link to="/voice-assistant">{t('schemes_page.ask_assistant')}</Link>
+                      </Button>
                       <Button
                         variant="outline"
-                        onClick={() => handleCheckEligibility(c.title)} // Using category title as proxy scheme name for demo
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCheckEligibility(c.title);
+                        }}
                         disabled={checkingId === c.title}
                       >
                         {checkingId === c.title ? "Checking..." : t('schemes_page.check_eligibility')}
