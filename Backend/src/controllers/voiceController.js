@@ -74,6 +74,57 @@ exports.processVoice = async (req, res) => {
       }
     }
 
+    // Strategy C: LLM Fallback - If still no matches, ask Gemini for scheme suggestions
+    if (directMatches.length === 0 && analysis.intent === "scheme_search") {
+      console.log("🌐 No local results, calling Gemini API for scheme suggestions...");
+      try {
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({
+          model: "gemini-flash-latest",
+          generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const prompt = `
+          You are a civic scheme expert. The user is searching for: "${text}" in ${language}.
+          The scheme was not found in our database.
+          
+          List 3-5 real government schemes that closely match this search.
+          
+          Return JSON object with a "schemes" array, where each item has:
+          - name (Exact official name)
+          - description (1 sentence summary)
+          - category (e.g. Health, Education, Welfare, Women Empowerment)
+          - eligibility (Short eligibility summary)
+          
+          IMPORTANT:
+          - Do NOT make up fake schemes. Only real ones.
+          - If unsure, return an empty array.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text_response = response.text().replace(/```json/g, "").replace(/```/g, "").trim();
+        const data = JSON.parse(text_response);
+
+        // Transform to match schema format
+        directMatches = (data.schemes || []).map(s => ({
+          id: s.name, // Use name as ID for LLM-generated details
+          name_en: s.name,
+          description_en: s.description,
+          category_en: s.category,
+          isExternal: true,
+          source: "gemini_suggestion"
+        }));
+
+        console.log(`✨ Gemini suggested ${directMatches.length} schemes via AI`);
+      } catch (llmError) {
+        console.error("Gemini fallback failed:", llmError);
+        // Continue with empty matches if LLM fails
+      }
+    }
+
+
     // 2. User Context
     let userProfile = null;
     if (userId) {
@@ -86,7 +137,7 @@ exports.processVoice = async (req, res) => {
     // Since history contains user+assistant messages, 10 messages = 5 turns.
     const isLongConversation = history.length >= 10;
 
-    const intentData = await analyzeIntent(text, history, directMatches, isLongConversation);
+    const intentData = await analyzeIntent(text, history, directMatches, isLongConversation, language);
 
     // 4. Eligibility & Logic
     const specificScheme = intentData.suggested_schemes && intentData.suggested_schemes.length > 0

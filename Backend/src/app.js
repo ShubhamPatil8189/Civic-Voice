@@ -75,6 +75,7 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 ====================================================== */
 
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/users", require("./routes/userRoutes")); // Added users route
 app.use("/api/visual", require("./routes/visualRoutes"));
 app.use("/api/session", require("./routes/sessionroutes"));
 app.use("/api/conversation", require("./routes/conversationsroutes"));
