@@ -144,9 +144,14 @@ const Landing = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {pages.map((page) => (
+            {[
+              { title: "Agriculture", path: "/schemes/category/Agriculture", desc: "Farmer support & loans" },
+              { title: "Education", path: "/schemes/category/Education", desc: "Scholarships & student aid" },
+              { title: "Healthcare", path: "/schemes/category/Health%20%26%20Wellness", desc: "Medical insurance & aid" },
+              { title: "Social Welfare", path: "/schemes/category/Social%20welfare%20%26%20Empowerment", desc: "Pension & housing support" }
+            ].map((page) => (
               <Link
-                key={page.path}
+                key={page.title}
                 to={page.path}
                 className="group nav-card"
               >
@@ -159,7 +164,7 @@ const Landing = () => {
                           {page.title}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {page.description}
+                          {page.desc}
                         </p>
                       </div>
                       <ArrowRight className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-2" />
