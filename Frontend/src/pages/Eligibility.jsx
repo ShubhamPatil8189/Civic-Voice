@@ -129,7 +129,22 @@ const EligibilityPage = () => {
     );
   }
 
-  const { name, description, eligibilityCriteria = [], requiredDocuments = [], benefits = [], category, steps = [], officialWebsite } = data;
+  const {
+    name,
+    description,
+    eligibilityCriteria: rawEligibilityCriteria,
+    requiredDocuments: rawRequiredDocuments,
+    benefits: rawBenefits,
+    category,
+    steps: rawSteps,
+    officialWebsite
+  } = data;
+
+  // Defensive array checks to prevent crashes
+  const eligibilityCriteria = Array.isArray(rawEligibilityCriteria) ? rawEligibilityCriteria : [];
+  const requiredDocuments = Array.isArray(rawRequiredDocuments) ? rawRequiredDocuments : [];
+  const benefits = Array.isArray(rawBenefits) ? rawBenefits : [];
+  const steps = Array.isArray(rawSteps) ? rawSteps : [];
 
   const languageLabels = {
     en: { label: "English", flag: "🇺🇸" },
