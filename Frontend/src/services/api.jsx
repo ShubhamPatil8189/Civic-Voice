@@ -48,7 +48,7 @@ export const authAPI = {
             throw error;
         }
     },
-    
+
     // Register
     register: async (userData) => {
         try {
@@ -62,7 +62,7 @@ export const authAPI = {
             throw error;
         }
     },
-    
+
     // Get user profile by email
     getProfile: async (email) => {
         try {
@@ -73,13 +73,33 @@ export const authAPI = {
             throw error;
         }
     },
-    
+
+    // Get current logged-in user from localStorage
+    getCurrentUser: () => {
+        try {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                throw new Error('No user found in storage');
+            }
+            const user = JSON.parse(userStr);
+            return {
+                data: {
+                    success: true,
+                    user: user
+                }
+            };
+        } catch (error) {
+            console.error('Get current user error:', error);
+            throw error;
+        }
+    },
+
     // Update profile by email
     updateProfile: async (email, userData) => {
         try {
             console.log('Sending update for email:', email);
             console.log('Update data:', userData);
-            
+
             const response = await api.put(`/users/profile/${email}`, userData);
             console.log('Update response:', response.data);
             return response;
@@ -88,7 +108,7 @@ export const authAPI = {
             throw error;
         }
     },
-    
+
     // Logout
     logout: () => {
         localStorage.removeItem('user');

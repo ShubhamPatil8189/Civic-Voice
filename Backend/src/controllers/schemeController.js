@@ -71,7 +71,7 @@ const searchWithGeminiAPI = async (req, res) => {
       schemes: []
     });
   }
-  const genAI = new GoogleGenerativeAI("REDACTED_GEMINI_API_KEY");
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
   try {
     console.log(`🔍 Searching for: "${keyword}"`);
